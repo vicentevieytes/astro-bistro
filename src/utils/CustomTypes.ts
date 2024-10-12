@@ -1,4 +1,5 @@
 interface restaurante {
+    id: number;
     name: string;
     coords: L.LatLngExpression;
     description: string;
