@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 ---
 
-<Layout title="Welcome to Astro.">
+<Layout title="Restaurant.">
 	<main>
 		<h1>
 			Bienvenido a <span class="text-gradient">VerLaCarta</span>
@@ -12,9 +12,23 @@ import Card from '../components/Card.astro';
 			role="list"
 			class="link-card-grid">
 			<Card
-				href="/locales"
-				title="Ver locales cercanos"
-				body="Mira todos los locales que tienes cerca."
+				href="https://astro.build/integrations/"
+				title="Ver la carta"
+				body="Accedé a todas las opciones de platos y bebidas que tenemos disponibles."
+			/>
+			<Card
+				href="https://docs.astro.build/"
+				title="Hacer pedido"
+				body="Realizá tu pedido de la forma más fácil y efectiva."
+			/>
+		</ul>
+		<ul
+			role="list"
+			class="link-card-grid">
+			<Card
+				href="../"
+				title="Ir a la página principal"
+				body="Volver a VerLaCarta"
 			/>
 		</ul>
 	</main>
@@ -57,7 +71,10 @@ import Card from '../components/Card.astro';
 		text-align: center;
 		margin-bottom: 2rem;
 		border: 1px solid rgba(var(--accent-light), 25%);
-		background: linear-gradient(rgba(var(--accent-dark), 66%), rgba(var(--accent-dark), 33%));
+		background: linear-gradient(
+			rgba(var(--accent-dark), 66%),
+			rgba(var(--accent-dark), 33%)
+		);
 		padding: 1.5rem;
 		border-radius: 8px;
 	}
