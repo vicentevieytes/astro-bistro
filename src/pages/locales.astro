@@ -1,8 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
 ---
 
 <head>
+	<meta charset="utf-8" />
 	<!-- CSS de Leaflet -->
 	<link
 		rel="stylesheet"
@@ -21,6 +23,16 @@ import Layout from '../layouts/Layout.astro';
 			class="map-container"
 			style="height: 500px;">
 		</div>
+
+		<ul
+			role="list"
+			class="link-card-grid">
+			<Card
+				href="../"
+				title="Ir a la página principal"
+				body="Volver a VerLaCarta"
+			/>
+		</ul>
 
 		<script>
 			import L from 'leaflet';
