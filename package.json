@@ -8,13 +8,14 @@
         "build": "astro check && astro build",
         "preview": "astro preview",
         "astro": "astro",
-        "backend": "node server.js"
+        "backend": "cd backend && node server.js"
     },
     "dependencies": {
         "@astrojs/check": "^0.9.4",
-        "@astrojs/db": "^0.14.2",
         "astro": "^4.16.0",
         "cors": "^2.8.5",
+        "csvtojson": "^2.0.10",
+        "dotenv": "^16.4.5",
         "express": "^4.21.1",
         "leaflet": "^1.9.4",
         "typescript": "^5.6.2"

@@ -33,7 +33,7 @@ import Card from '../components/Card.astro';
 		</ul>
 	</main>
 	<script>
-		const response = await fetch('http://localhost:5000/api'),
+		const response = await fetch('http://localhost:5000/restaurante'),
 			data = await response.json();
 		console.log(data);
 	</script>

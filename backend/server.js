@@ -1,9 +1,16 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import { convertToJSON } from '../src/utils/auxiliary.js';
+
+dotenv.config();
 
 // Initialize express app
-const app = express();
+const app = express(),
+    SPREADSHEET_ID = process.env.SPREADSHEET_ID,
+    INTEGRATION_ID = process.env.INTEGRATION_ID,
+    API_URL = process.env.API_URL;
 
 // Use CORS middleware to allow cross-origin requests
 app.use(
@@ -16,10 +23,10 @@ app.use(
 app.use(bodyParser.json());
 
 // Basic route for testing
-app.get('/api', (req, res) => {
-    res.send({
-        WorkingStatus: 'API is working',
-    });
+app.get('/Restaurante', async (req, res) => {
+    const response = await fetch(`${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}/values/Restaurante`),
+        data = await response.json();
+    res.send(convertToJSON(data.values));
 });
 
 // Set up port

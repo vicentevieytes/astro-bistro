@@ -38,7 +38,7 @@ import Card from '../components/Card.astro';
 			import L from 'leaflet';
 			import type { restaurante } from '../utils/CustomTypes';
 
-			document.addEventListener('DOMContentLoaded', function () {
+			document.addEventListener('DOMContentLoaded', async function () {
 				// Coordenadas de Ciudad Universitaria
 				const ciudadUniversitariaCoords = [-34.541895, -58.437618] as L.LatLngExpression,
 					map = L.map('map').setView(ciudadUniversitariaCoords, 15);
@@ -52,60 +52,17 @@ import Card from '../components/Card.astro';
 				L.marker(ciudadUniversitariaCoords).addTo(map).bindPopup('<h3>Ciudad Universitaria</h3><p>Buenos Aires</p>').openPopup();
 
 				// Simular algunos locales cercanos con descripciones detalladas
-				const localesCercanos = [
-					{
-						id: 1,
-						name: 'Café Universitario',
-						coords: [-34.5425, -58.437],
-						description: 'Un lugar tranquilo para estudiar, con una excelente variedad de café y snacks.',
-					},
-					{
-						id: 2,
-						name: 'Kiosko Al Paso',
-						coords: [-34.5405, -58.4385],
-						description: 'Kiosko ideal para comprar cosas rápidas entre clases. Tienen de todo.',
-					},
-					{
-						id: 3,
-						name: 'Librería Universitaria',
-						coords: [-34.543, -58.4368],
-						description: 'Librería especializada en textos académicos y materiales de estudio.',
-					},
-					{
-						id: 4,
-						name: 'Comida Rápida Gourmet',
-						coords: [-34.5427, -58.4362],
-						description: 'Deliciosos platos de comida rápida, ideales para llevar entre clases.',
-					},
-					{
-						id: 5,
-						name: 'Heladería Fresca',
-						coords: [-34.5434, -58.438],
-						description: 'Helados artesanales para disfrutar en un día caluroso.',
-					},
-					{
-						id: 6,
-						name: 'Pizzería Universitaria',
-						coords: [-34.5408, -58.4374],
-						description: 'Pizzas al paso con los mejores ingredientes.',
-					},
-					{
-						id: 7,
-						name: 'Panadería El Estudiante',
-						coords: [-34.542, -58.4358],
-						description: 'Pan recién horneado y pasteles ideales para el desayuno.',
-					},
-					{
-						id: 8,
-						name: 'Cafetería Aroma',
-						coords: [-34.5435, -58.4365],
-						description: 'Cafés especiales y un ambiente acogedor para estudiar.',
-					},
-				] as restaurante[];
+				const localesResponse = await fetch('http://localhost:5000/restaurante'),
+					localesData = (await localesResponse.json()) as restaurante[];
 
+				console.log(localesData);
 				// Agregar marcadores de locales cercanos con descripciones detalladas
-				localesCercanos.forEach((local: restaurante) => {
-					const marker = L.marker(local.coords).addTo(map);
+				localesData.forEach((local: restaurante) => {
+					const coords = [
+							parseFloat(local.lat.replace(',', '.')),
+							parseFloat(local.len.replace(',', '.')),
+						] as L.LatLngBoundsExpression,
+						marker = L.marker(coords).addTo(map);
 
 					// Bind popup con descripción
 					marker.bindPopup(`<a href="../local">${local.name}</a><p>${local.description}</p>`);
