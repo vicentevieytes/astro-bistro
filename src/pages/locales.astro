@@ -62,7 +62,7 @@ import Card from '../components/Card.astro';
 						marker = L.marker(coords).addTo(map);
 
 					// Bind popup con descripción
-					marker.bindPopup(`<a href="../local">${local.name}</a><p>${local.description}</p>`);
+					marker.bindPopup(`<a href="../local?id=${local.id}">${local.name}</a><p>${local.description}</p>`);
 
 					// Abrir el popup al hacer clic en el marcador
 					marker.on('click', () => {
@@ -70,7 +70,7 @@ import Card from '../components/Card.astro';
 					});
 
 					// Console log para verificar que se añaden los marcadores
-					console.log(`Marcador agregado: ${local.name} en ${local.coords}`);
+					console.log(`Marcador agregado: ${local.name} en ${coords}`);
 				});
 			});
 		</script>

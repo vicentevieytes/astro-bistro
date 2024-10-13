@@ -6,4 +6,12 @@ interface restaurante {
     description: string;
 }
 
-export type { restaurante };
+interface itemMenu {
+    id: number;
+    restaurant_id: number;
+    name: string;
+    price: string;
+    description: string;
+}
+
+export type { restaurante, itemMenu };

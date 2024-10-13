@@ -1,18 +1,25 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
+const url = new URL(Astro.request.url),
+	localId = url.searchParams.get('id'),
+	response = await fetch(`http://localhost:5000/local?id=${localId}`),
+	data = await response.json(),
+	localData = data[0];
+
+console.log(data);
 ---
 
 <Layout title="Restaurant.">
 	<main>
 		<h1>
-			Bienvenido a <span class="text-gradient">VerLaCarta</span>
+			Bienvenido a <span class="text-gradient">{localData.name}</span>
 		</h1>
 		<ul
 			role="list"
 			class="link-card-grid">
 			<Card
-				href="https://astro.build/integrations/"
+				href=`http://localhost:4321/menu?id=${localId}`
 				title="Ver la carta"
 				body="Accedé a todas las opciones de platos y bebidas que tenemos disponibles."
 			/>
@@ -32,11 +39,6 @@ import Card from '../components/Card.astro';
 			/>
 		</ul>
 	</main>
-	<script>
-		const response = await fetch('http://localhost:5000/restaurante'),
-			data = await response.json();
-		console.log(data);
-	</script>
 </Layout>
 
 <style>

@@ -29,6 +29,24 @@ app.get('/Restaurante', async (req, res) => {
     res.send(convertToJSON(data.values));
 });
 
+app.get('/local', async (req, res) => {
+    const id = req.query.id,
+        response = await fetch(`${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}/values/Restaurante`),
+        data = await response.json(),
+        localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
+
+    res.send(convertToJSON(localData));
+});
+
+app.get('/menu', async (req, res) => {
+    const id = req.query.id,
+        response = await fetch(`${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}/values/Menu`),
+        data = await response.json(),
+        localData = data.values.filter((row) => row[1] === id || row[0] === 'id');
+
+    res.send(convertToJSON(localData));
+});
+
 // Set up port
 const PORT = process.env.PORT || 5000;
 
