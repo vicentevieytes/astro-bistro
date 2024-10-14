@@ -6,10 +6,7 @@ import Card from '../components/Card.astro';
 <head>
 	<meta charset="utf-8" />
 	<!-- CSS de Leaflet -->
-	<link
-		rel="stylesheet"
-		href="https://unpkg.com/leaflet/dist/leaflet.css"
-	/>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 	<!-- JS de Leaflet -->
 	<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
@@ -18,20 +15,10 @@ import Card from '../components/Card.astro';
 	<main>
 		<h1>Locales Cercanos</h1>
 		<!-- Aquí iría tu mapa y el contenido relacionado -->
-		<div
-			id="map"
-			class="map-container"
-			style="height: 500px;">
-		</div>
+		<div id="map" class="map-container" style="height: 500px;"></div>
 
-		<ul
-			role="list"
-			class="link-card-grid">
-			<Card
-				href="../"
-				title="Ir a la página principal"
-				body="Volver a VerLaCarta"
-			/>
+		<ul role="list" class="link-card-grid">
+			<Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
 		</ul>
 
 		<script>
@@ -52,7 +39,7 @@ import Card from '../components/Card.astro';
 				L.marker(ciudadUniversitariaCoords).addTo(map).bindPopup('<h3>Ciudad Universitaria</h3><p>Buenos Aires</p>').openPopup();
 
 				// Simular algunos locales cercanos con descripciones detalladas
-				const localesResponse = await fetch('http://localhost:5000/restaurante'),
+				const localesResponse = await fetch('http://localhost:5001/restaurante'),
 					localesData = (await localesResponse.json()) as restaurante[];
 
 				console.log(localesData);

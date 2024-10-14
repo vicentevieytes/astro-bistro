@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import {convertToJSON} from '../src/utils/auxiliary.js';
+import {convertToJSON} from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
 
 dotenv.config();
@@ -25,11 +25,12 @@ app.use(
 app.use(bodyParser.json());
 
 const BASE_URL = `${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}`;
-
+console.log(BASE_URL)
 const RESTAURANTE_SHEET_NAME = 'Restaurante';
 const MENU_SHEET_NAME = 'Menu';
+const COMANDA_SHEET_NAME = 'Comanda';
 
-const ALL_SHEET_NAMES = [RESTAURANTE_SHEET_NAME, MENU_SHEET_NAME];
+const ALL_SHEET_NAMES = [RESTAURANTE_SHEET_NAME, MENU_SHEET_NAME, COMANDA_SHEET_NAME];
 
 async function fetchSheetData(sheetName) {
     try {
@@ -123,6 +124,17 @@ app.get('/menu', async (req, res) => {
     }
 });
 
+app.get('/comandas', async (req, res) => {
+    const id = req.query.id;
+    try {
+        const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
+        const localData = data.values.filter((row) => row[1] === id || row[0] === 'id');
+        res.send(convertToJSON(localData));
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while fetching data' });
+    }
+});
+
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {
     const { sheetName } = req.body;
@@ -141,7 +153,7 @@ app.post('/invalidate-cache', (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

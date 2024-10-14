@@ -3,40 +3,28 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 const url = new URL(Astro.request.url),
 	localId = url.searchParams.get('id'),
-	response = await fetch(`http://localhost:5000/local?id=${localId}`),
+	response = await fetch(`http://localhost:5001/local?id=${localId}`),
 	data = await response.json(),
 	localData = data[0];
 
 console.log(data);
 ---
 
-<Layout title="Restaurant.">
+<Layout title="Restaurant">
 	<main>
 		<h1>
 			Bienvenido a <span class="text-gradient">{localData.name}</span>
 		</h1>
-		<ul
-			role="list"
-			class="link-card-grid">
+		<ul role="list" class="link-card-grid">
 			<Card
-				href=`../menu?id=${localId}`
+				href={`../menu?id=${localId}`}
 				title="Ver la carta"
 				body="Accedé a todas las opciones de platos y bebidas que tenemos disponibles."
 			/>
-			<Card
-				href="https://docs.astro.build/"
-				title="Hacer pedido"
-				body="Realizá tu pedido de la forma más fácil y efectiva."
-			/>
+			<Card href={`../pedido?id=${localId}`} title="Hacer pedido" body="Realizá tu pedido de la forma más fácil y efectiva." />
 		</ul>
-		<ul
-			role="list"
-			class="link-card-grid">
-			<Card
-				href="../"
-				title="Ir a la página principal"
-				body="Volver a VerLaCarta"
-			/>
+		<ul role="list" class="link-card-grid">
+			<Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
 		</ul>
 	</main>
 </Layout>

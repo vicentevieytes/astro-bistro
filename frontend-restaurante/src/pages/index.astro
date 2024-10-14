@@ -1,22 +1,46 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
+import type { Restaurante } from '../types/types'; // Asegúrate de la ruta correcta
+
+const urlParams = new URLSearchParams(Astro.url.search);
+
+let restaurantes = [];
+const responseRestaurante = await fetch(`http://localhost:5001/Restaurante`);
+restaurantes = await responseRestaurante.json();
+console.log(restaurantes);
 ---
 
-<Layout title="Welcome to Astro.">
+<Layout title="VerLaCarta | Restaurantes">
 	<main>
 		<h1>
 			Bienvenido a <span class="text-gradient">VerLaCarta</span>
 		</h1>
-		<ul
-			role="list"
-			class="link-card-grid">
-			<Card
-				href="/locales"
-				title="Ver locales cercanos"
-				body="Mira todos los locales que tienes cerca."
-			/>
+		<h2>
+			<span class="text-gradient">Restaurantes</span> disponibles:
+		</h2>
+		<ul role="list" class="link-card">
+			{
+				restaurantes.map((restaurante: Restaurante) => (
+					<li class="link-card">
+						<Card
+							href={`/comandas?id=${restaurante.id}`}
+							title={restaurante.name}
+							body={restaurante.description || 'Descripción no disponible.'}
+						/>
+
+						{/* <a href={`/index?id=${restaurante.id}`}>
+							<h2>
+								{restaurante.name}
+								<span>&rarr;</span>
+							</h2>
+							<p>{restaurante.description || 'Descripción no disponible.'}</p>
+						</a> */}
+					</li>
+				))
+			}
 		</ul>
+		{restaurantes.length === 0 && <p>No hay restaurantes registrados.</p>}
 	</main>
 </Layout>
 
@@ -77,5 +101,14 @@ import Card from '../components/Card.astro';
 		grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
 		gap: 2rem;
 		padding: 0;
+	}
+	.link-card {
+		list-style: none; /* Elimina el punto de los ítems de la lista */
+		/* display: flexs; */
+		padding: 10px;
+		/* background-color: #23262d;
+		border-radius: 7px;
+		transition: background-position 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); */ */
 	}
 </style>

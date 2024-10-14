@@ -1,0 +1,26 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+import type { Comanda } from '../types/types';
+
+const urlParams = new URLSearchParams(Astro.url.search);
+const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+
+let comandas = [];
+const response = await fetch(`http://localhost:5001/comandas?id=${localId}`);
+comandas = await response.json();
+
+console.log(comandas);
+---
+
+<Layout title="Comandas">
+    <main>
+        <h1>
+            <span class="text-gradient">Comandas</span> recibidas:
+        </h1>
+        <ul role="list" class="link-card">
+            {comandas.map((comanda: Comanda) => <li class="link-card"> ... </li>)}
+        </ul>
+        {comandas.length === 0 && <p>No hay comandas registrados.</p>}
+    </main>
+</Layout>

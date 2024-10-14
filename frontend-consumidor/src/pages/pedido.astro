@@ -1,0 +1,147 @@
+---
+// pedido.astro
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+
+const urlParams = new URLSearchParams(Astro.url.search);
+const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+
+let menuData = [],
+    restauranteData = [];
+
+if (localId) {
+    const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
+        responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
+    restauranteData = await responseRestaurante.json();
+    menuData = await response.json(); // Obtener el menú desde el backend
+}
+
+console.log(restauranteData);
+console.log(menuData);
+---
+
+<Layout title="Hacer Pedido">
+    <main>
+        <h1>
+            Hacer un pedido en <span class="text-gradient">{restauranteData?.name}</span>
+        </h1>
+        <form id="order-form" class="form-card">
+            <div class="form-group">
+                <label for="dish">Selecciona tu plato:</label>
+                <select id="dish" name="dish" required>
+                    <option value="">--Selecciona--</option>
+                    {
+                        menuData.map((dish) => (
+                            <option value={dish.id} key={dish.id}>
+                                {dish.name} - ${dish.price}
+                            </option>
+                        ))
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Cantidad:</label>
+                <input type="number" id="quantity" name="quantity" min="1" required />
+            </div>
+            <button type="submit" class="submit-button">Agregar al pedido</button>
+        </form>
+
+        {/* Resumen del pedido */}
+        <section class="order-summary">
+            <h2>Resumen del Pedido</h2>
+            <ul id="summary-list"></ul>
+            <h3>Total: $<span id="total-price">0.00</span></h3>
+        </section>
+        <ul role="list" class="link-card-grid">
+            <Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
+        </ul>
+    </main>
+</Layout>
+
+<!-- <script>
+    // Obtener elementos del DOM
+    const orderForm = document.getElementById('order-form');
+    const summaryList = document.getElementById('summary-list');
+    const totalPriceElement = document.getElementById('total-price');
+
+    let totalPrice = 0; // Total inicial del pedido
+
+    orderForm?.addEventListener('submit', (event) => {
+        event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+        const dishId = event?.target?.dishId.value;
+        const quantity = parseInt(event?.target?.quantity.value);
+
+        const selectedDish = [...document.querySelectorAll('#dish option')].find((option) => option.value === dishId);
+
+        if (selectedDish) {
+            const dishName = selectedDish.textContent.split(' - ')[0]; // Obtener el nombre del plato
+            const dishPrice = parseFloat(selectedDish.textContent.split(' - $')[1]);
+            const itemTotal = dishPrice * quantity;
+            totalPrice += itemTotal;
+
+            // Agregar el item al resumen
+            const listItem = document.createElement('li');
+            listItem.textContent = `${dishName} - Cantidad: ${quantity} - Total: $${itemTotal.toFixed(2)}`;
+            summaryList.appendChild(listItem);
+
+            // Actualizar el precio total
+            totalPriceElement.textContent = totalPrice.toFixed(2);
+        }
+
+        orderForm.reset(); // Resetear el formulario
+    });
+</script> -->
+
+<style>
+    .form-card {
+        display: flex;
+        flex-direction: column;
+        background-color: #23262d;
+        border-radius: 7px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        color: white;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .form-group select,
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #1f2124;
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus,
+    .form-group textarea:focus {
+        background-color: #292d32;
+        outline: none;
+    }
+
+    .submit-button {
+        background-color: var(--accent-gradient);
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .submit-button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+</style>

@@ -8,9 +8,10 @@ const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la U
 
 let menuData = [],
 	restauranteData = [];
+
 if (localId) {
-	const response = await fetch(`http://localhost:5000/menu?id=${localId}`),
-		responseRestaurante = await fetch(`http://localhost:5000/local?id=${localId}`);
+	const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
+		responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
 	restauranteData = await responseRestaurante.json();
 	menuData = await response.json(); // Obtener el menú desde el backend
 }
@@ -19,19 +20,9 @@ if (localId) {
 <Layout title="Menú del Restaurante">
 	<main>
 		<h1>{(restauranteData[0] as restaurante).name}</h1>
-		<ul
-			role="list"
-			class="link-card-grid">
-			<Card
-				href=`../local?id=${localId}`
-				title="Volver"
-				body="Volver a la página del restaurante"
-			/>
-			<Card
-				href="../../"
-				title="Ir a la página principal"
-				body="Volver a VerLaCarta"
-			/>
+		<ul role="list" class="link-card-grid">
+			<Card href=`../local?id=${localId}` title="Volver" body="Volver a la página del restaurante" />
+			<Card href="../../" title="Ir a la página principal" body="Volver a VerLaCarta" />
 		</ul>
 
 		{
