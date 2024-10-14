@@ -1,26 +1,183 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
-import type { Comanda } from '../types/types';
+import type { Comanda, Producto, Estado } from '../types/types';
+// import { useState } from 'astro/jsx-runtime'; // Permite el uso de hooks en Astro
 
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
 
 let comandas = [];
-const response = await fetch(`http://localhost:5001/comandas?id=${localId}`);
-comandas = await response.json();
+const responseComandas = await fetch(`http://localhost:5001/comandas?id=${localId}`);
+comandas = await responseComandas.json();
 
-console.log(comandas);
+// Hacer fetch para obtener los productos
+const responseProducts = await fetch(`http://localhost:5001/menu?id=${localId}`);
+const products = await responseProducts.json();
+
+// Hacer fetch para obtener todos los estados
+const responseStates = await fetch('http://localhost:5001/Estado');
+const estados = await responseStates.json();
+
+// Unir la información de las comandas con la información del producto
+const comandasWithProductInfo = comandas.map((comanda: Comanda) => {
+    // Buscar el producto relacionado con la comanda actual
+    const productInfo = products.find((product: Producto) => product.id === comanda.productId);
+    const stateInfo = comandas.find((state: Estado) => state.id === comanda.state.id);
+
+    return {
+        ...comanda,
+        product: {
+            id: productInfo.id,
+            name: productInfo.name,
+            price: productInfo.price,
+            description: productInfo.description,
+        },
+        stateInfo,
+    };
+});
 ---
+
+<script>
+    document.querySelectorAll('select[name^="estado-"]').forEach((select) => {
+        select.addEventListener('change', function (event) {
+            const target = event.target as HTMLSelectElement; // Aserción de tipo
+            const comandaId = parseInt(target.id.split('-')[1]); // Obtiene el ID de la comanda
+            const productId = parseInt(target.id.split('-')[2]); // Obtiene el ID del producto
+            const newStateId = parseInt(target.value);
+
+            handleStateChange(comandaId, productId, newStateId);
+        });
+    });
+
+    async function handleStateChange(comandaId: number, productId: number, newStateId: number) {
+        console.log('Estado cambiado:', comandaId, productId, newStateId);
+
+        try {
+            console.log('1');
+            const response = await fetch('http://localhost:5001/comanda/estado', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: comandaId,
+                    productId: productId,
+                    stateId: newStateId,
+                }),
+            });
+            console.log('2');
+
+            if (!response.ok) {
+                throw new Error('Error al actualizar el estado');
+            }
+            console.log('3');
+
+            const result = await response.json();
+            console.log('4');
+
+            console.log('Respuesta del servidor:', result.message);
+        } catch (error) {
+            console.error('Error al realizar la petición:', error);
+        }
+    }
+</script>
 
 <Layout title="Comandas">
     <main>
         <h1>
-            <span class="text-gradient">Comandas</span> recibidas:
+            <span class="text-gradient">Comandas</span> recibidas
         </h1>
         <ul role="list" class="link-card">
-            {comandas.map((comanda: Comanda) => <li class="link-card"> ... </li>)}
+            {
+                comandasWithProductInfo.map((comanda: Comanda) => (
+                    <li class="link-card">
+                        <p>
+                            Product ID: {comanda.product.id}, Name: {comanda.product.name}, Cantidad: {comanda.quantity},
+                            {comanda.comments ? `Comments: ${comanda.comments}` : 'Sin detalles adicionales'}
+                        </p>
+                        <label for={`estado-${comanda.id}`}>Estado:</label>
+                        <select id={`estado-${comanda.id}-${comanda.product.id}`} name={`estado-${comanda.id}`} value={comanda.state.id}>
+                            {estados.map((estado: Estado) => (
+                                <option value={estado.id}>{estado.description}</option>
+                            ))}
+                        </select>
+                    </li>
+                ))
+            }
         </ul>
-        {comandas.length === 0 && <p>No hay comandas registrados.</p>}
+        {comandasWithProductInfo.length === 0 && <p>No hay comandas registradas.</p>}
     </main>
 </Layout>
+
+<style>
+    main {
+        margin: auto;
+        padding: 1rem;
+        width: 800px;
+        max-width: calc(100% - 2rem);
+        color: white;
+        font-size: 20px;
+        line-height: 1.6;
+    }
+    .astro-a {
+        position: absolute;
+        top: -32px;
+        left: 50%;
+        transform: translatex(-50%);
+        width: 220px;
+        height: auto;
+        z-index: -1;
+    }
+    h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        margin-bottom: 1em;
+    }
+    .text-gradient {
+        background-image: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 400%;
+        background-position: 0%;
+    }
+    .localesCercanos {
+        text-align: center;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(var(--accent-light), 25%);
+        background: linear-gradient(rgba(var(--accent-dark), 66%), rgba(var(--accent-dark), 33%));
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+    .instructions code {
+        font-size: 0.8em;
+        font-weight: bold;
+        background: rgba(var(--accent-light), 12%);
+        color: rgb(var(--accent-light));
+        border-radius: 4px;
+        padding: 0.3em 0.4em;
+    }
+    .instructions strong {
+        color: rgb(var(--accent-light));
+    }
+    .link-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+        gap: 2rem;
+        padding: 0;
+    }
+    .link-card {
+        list-style: none;
+        padding: 1rem;
+        margin: 1rem 0;
+        background-color: #23262d;
+        border-radius: 7px;
+        color: white;
+    }
+    .link-card p {
+        margin: 0.5rem 0;
+        display: inline-block; /* Para asegurarse de que todos los elementos estén en una sola línea */
+    }
+</style>

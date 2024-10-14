@@ -1,14 +1,30 @@
 export interface Comanda {
-    id: string;
-    dish_name: string;
+    id: number;
+    productId: number;
+    restaurantId: number;
     quantity: number;
-    total_price: string; // O puedes usar `number` si prefieres trabajar con números
+    comments: string;
+    product: Producto;
+    state: Estado;
 }
 
 export interface Restaurante {
-    id: string; // Identificador único del restaurante
+    id: number; // Identificador único del restaurante
     name: string; // Nombre del restaurante
-    lat: string;
-    len: string;
+    lat: number;
+    len: number;
     description: string; // Descripción del restaurante
+}
+
+export interface Producto {
+    id: number;
+    restaurant_id: number;
+    name: string;
+    price: number;
+    description: string;
+}
+
+export interface Estado {
+    id: number;
+    description: string;
 }

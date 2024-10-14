@@ -25,12 +25,12 @@ app.use(
 app.use(bodyParser.json());
 
 const BASE_URL = `${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}`;
-console.log(BASE_URL)
 const RESTAURANTE_SHEET_NAME = 'Restaurante';
 const MENU_SHEET_NAME = 'Menu';
 const COMANDA_SHEET_NAME = 'Comanda';
+const ESTADO_SHEET_NAME = 'Estado';
 
-const ALL_SHEET_NAMES = [RESTAURANTE_SHEET_NAME, MENU_SHEET_NAME, COMANDA_SHEET_NAME];
+const ALL_SHEET_NAMES = [RESTAURANTE_SHEET_NAME, MENU_SHEET_NAME, COMANDA_SHEET_NAME, ESTADO_SHEET_NAME];
 
 async function fetchSheetData(sheetName) {
     try {
@@ -44,6 +44,28 @@ async function fetchSheetData(sheetName) {
     } catch (error) {
         console.error(`Error fetching data from ${sheetName} sheet:`, error);
         throw error;
+    }
+}
+
+// Definición de la función para actualizar la hoja de cálculo
+async function updateSheetData(sheetName, values) {
+    console.log("Aca está el error");
+
+    const response = await fetch(`${BASE_URL}/values/${sheetName}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            // range: sheetName,
+            values: values,
+        }),
+    });
+
+    // console.log(response)
+
+    if (!response.ok) {
+        throw new Error('Error al actualizar los datos en la hoja de cálculo');
     }
 }
 
@@ -102,6 +124,15 @@ app.get('/Restaurante', async (req, res) => {
     }
 });
 
+app.get('/Estado', async (req, res) => {
+    try {
+        const data = await fetchSheetDataWithCache(ESTADO_SHEET_NAME);
+        res.send(convertToJSON(data.values));
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while fetching data' });
+    }
+});
+
 app.get('/local', async (req, res) => {
     const id = req.query.id;
     try {
@@ -128,12 +159,55 @@ app.get('/comandas', async (req, res) => {
     const id = req.query.id;
     try {
         const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
-        const localData = data.values.filter((row) => row[1] === id || row[0] === 'id');
+        const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
         res.send(convertToJSON(localData));
     } catch (error) {
         res.status(500).json({ error: 'An error occurred while fetching data' });
     }
 });
+
+app.get('/estado', async (req, res) => {
+    const id = req.query.id;
+    try {
+        const data = await fetchSheetDataWithCache(ESTADO_SHEET_NAME);
+        const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
+        res.send(convertToJSON(localData));
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while fetching data' });
+    }
+});
+
+//---
+
+app.post('/comanda/estado', async (req, res) => {
+    const { id, productId, stateId } = req.body;
+
+    try {
+        // Obtener los datos actuales de la hoja de cálculo
+        const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
+
+        // Encontrar la fila que corresponde al ID de la comanda y al productId
+        const index = data.values.findIndex((row) => row[0] == parseInt(id) && row[1] == parseInt(productId));
+        
+        if (index === -1) {
+            return res.status(404).json({ error: 'Comanda o Producto no encontrado' });
+        }
+
+        // Actualizar el estado de la comanda en la fila correspondiente
+        data.values[index][5] = stateId;
+
+        // Llamar a la función que actualiza los datos en la hoja de cálculo
+        await updateSheetData(COMANDA_SHEET_NAME, data.values);
+
+        // Enviar una respuesta exitosa
+        res.status(200).json({ message: 'Estado actualizado correctamente' });
+    } catch (error) {
+        console.error('Error al actualizar el estado:', error);
+        res.status(500).json({ error: 'Ocurrió un error al actualizar el estado' });
+    }
+});
+
+
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {

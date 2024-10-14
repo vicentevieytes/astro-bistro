@@ -18,6 +18,7 @@
         "dotenv": "^16.4.5",
         "express": "^4.21.1",
         "hooks": "^0.3.2",
+        "jsx-runtime": "^1.2.0",
         "leaflet": "^1.9.4",
         "path": "^0.12.7",
         "typescript": "^5.6.2"
