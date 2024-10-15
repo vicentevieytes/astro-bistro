@@ -6,7 +6,10 @@ import Card from '../components/Card.astro';
 <head>
 	<meta charset="utf-8" />
 	<!-- CSS de Leaflet -->
-	<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+	<link
+		rel="stylesheet"
+		href="https://unpkg.com/leaflet/dist/leaflet.css"
+	/>
 	<!-- JS de Leaflet -->
 	<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
@@ -15,10 +18,20 @@ import Card from '../components/Card.astro';
 	<main>
 		<h1>Locales Cercanos</h1>
 		<!-- Aquí iría tu mapa y el contenido relacionado -->
-		<div id="map" class="map-container" style="height: 500px;"></div>
+		<div
+			id="map"
+			class="map-container"
+			style="height: 500px;">
+		</div>
 
-		<ul role="list" class="link-card-grid">
-			<Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
+		<ul
+			role="list"
+			class="link-card-grid">
+			<Card
+				href="../"
+				title="Ir a la página principal"
+				body="Volver a VerLaCarta"
+			/>
 		</ul>
 
 		<script>

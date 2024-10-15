@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import {convertToJSON} from '../frontend-consumidor/src/utils/auxiliary.js';
+import { convertToJSON } from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
 
 dotenv.config();
@@ -18,8 +18,8 @@ const cache = new NodeCache();
 
 app.use(
     cors({
-        origin: 'http://localhost:4321',
-    })
+        origin: ['http://localhost:4321', 'http://localhost:4322'],
+    }),
 );
 
 app.use(bodyParser.json());
@@ -49,7 +49,7 @@ async function fetchSheetData(sheetName) {
 
 // Definición de la función para actualizar la hoja de cálculo
 async function updateSheetData(sheetName, values) {
-    console.log("Aca está el error");
+    console.log('Aca está el error');
 
     const response = await fetch(`${BASE_URL}/values/${sheetName}`, {
         method: 'PUT',
@@ -80,7 +80,7 @@ async function pollForChanges() {
             if (JSON.stringify(currentData) !== JSON.stringify(cachedData)) {
                 // Remove these logs if you feel like it.
                 console.log(currentData);
-                console.log("vs");
+                console.log('vs');
                 console.log(cachedData);
                 console.log(`Data for ${sheetName} has changed, updating cache.`);
                 cache.set(cacheKey, currentData);
@@ -188,7 +188,7 @@ app.post('/comanda/estado', async (req, res) => {
 
         // Encontrar la fila que corresponde al ID de la comanda y al productId
         const index = data.values.findIndex((row) => row[0] == parseInt(id) && row[1] == parseInt(productId));
-        
+
         if (index === -1) {
             return res.status(404).json({ error: 'Comanda o Producto no encontrado' });
         }
@@ -206,8 +206,6 @@ app.post('/comanda/estado', async (req, res) => {
         res.status(500).json({ error: 'Ocurrió un error al actualizar el estado' });
     }
 });
-
-
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {
