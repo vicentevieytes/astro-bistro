@@ -1,0 +1,103 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+import type { Restaurante } from '../types/types'; // Asegúrate de la ruta correcta
+import '../styles/global.css';
+---
+
+<Layout title="Crear restaurante | Restaurantes">
+    <main>
+        <h1>
+            Crea <span class="text-gradient">tu</span> restaurante
+        </h1>
+        <form id="create-restaurant" action="/api/crear-restaurante" method="POST" enctype="multipart/form-data">
+            <!-- Nombre del restaurante -->
+            <div class="form-group">
+                <label for="nombre">Nombre del restaurante:</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Nombre del restaurante" />
+            </div>
+
+            <!-- Ubicación en el mapa -->
+            <div class="form-group">
+                <label for="mapa">Ubica tu restaurante en el mapa:</label>
+                <input type="text" id="mapa" name="mapa" placeholder="URL del mapa (Google Maps)" required />
+            </div>
+
+            <!-- Horarios y datos de contacto -->
+            <div class="form-group">
+                <label for="horarios">Horarios de atención:</label>
+                <input type="text" id="horarios" name="horarios" placeholder="Ej: Lunes a Viernes, 9am - 6pm" required />
+            </div>
+            <div class="form-group">
+                <label for="contacto">Datos de contacto:</label>
+                <input type="text" id="contacto" name="contacto" placeholder="Teléfono, email, etc." required />
+            </div>
+
+            <!-- Publicar la carta -->
+            <div class="form-group">
+                <label for="carta">Publicar la carta del lugar:</label>
+                <textarea id="carta" name="carta" rows="5" placeholder="Describe los platos y bebidas" required></textarea>
+            </div>
+
+            <!-- Fotos y logo -->
+            <div class="form-group">
+                <label for="fotos">Fotos del restaurante y logo:</label>
+                <input type="file" id="fotos" name="fotos" multiple />
+            </div>
+
+            <!-- Identificar las mesas -->
+            <div class="form-group">
+                <label for="mesas">Identificación de las mesas (para los pedidos):</label>
+                <textarea id="mesas" name="mesas" rows="3" placeholder="Ej: Mesa 1, Mesa 2, etc." required></textarea>
+            </div>
+
+            <!-- Botón de envío -->
+            <button type="submit" class="btn">Crear restaurante</button>
+        </form>
+    </main>
+</Layout>
+
+<style>
+    .restaurant-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    input[type='text'],
+    input[type='file'],
+    textarea {
+        padding: 0.5rem;
+        border: 1px solid rgba(var(--accent-light), 50%);
+        border-radius: 4px;
+        background-color: rgba(var(--accent-dark), 50%);
+        color: white;
+        font-size: 1em;
+    }
+
+    button {
+        background-color: var(--accent-light);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 1em;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: rgba(var(--accent-light), 0.8);
+    }
+</style>
