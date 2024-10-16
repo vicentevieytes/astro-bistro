@@ -2,11 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import type { Comanda, Producto, Estado } from '../types/types';
-// import { useState } from 'astro/jsx-runtime'; // Permite el uso de hooks en Astro
+import '../styles/global.css';
 
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
 
+// Hacer fetch para obtener las comandas
 let comandas = [];
 const responseComandas = await fetch(`http://localhost:5001/comandas?id=${localId}`);
 comandas = await responseComandas.json();
@@ -51,10 +52,9 @@ const comandasWithProductInfo = comandas.map((comanda: Comanda) => {
     });
 
     async function handleStateChange(comandaId: number, productId: number, newStateId: number) {
-        console.log('Estado cambiado:', comandaId, productId, newStateId);
+        // console.log('Estado cambiado:', comandaId, productId, newStateId);
 
         try {
-            console.log('1');
             const response = await fetch('http://localhost:5001/comanda/estado', {
                 method: 'POST',
                 headers: {
@@ -66,15 +66,12 @@ const comandasWithProductInfo = comandas.map((comanda: Comanda) => {
                     stateId: newStateId,
                 }),
             });
-            console.log('2');
 
             if (!response.ok) {
                 throw new Error('Error al actualizar el estado');
             }
-            console.log('3');
 
             const result = await response.json();
-            console.log('4');
 
             console.log('Respuesta del servidor:', result.message);
         } catch (error) {
@@ -111,63 +108,6 @@ const comandasWithProductInfo = comandas.map((comanda: Comanda) => {
 </Layout>
 
 <style>
-    main {
-        margin: auto;
-        padding: 1rem;
-        width: 800px;
-        max-width: calc(100% - 2rem);
-        color: white;
-        font-size: 20px;
-        line-height: 1.6;
-    }
-    .astro-a {
-        position: absolute;
-        top: -32px;
-        left: 50%;
-        transform: translatex(-50%);
-        width: 220px;
-        height: auto;
-        z-index: -1;
-    }
-    h1 {
-        font-size: 4rem;
-        font-weight: 700;
-        line-height: 1;
-        text-align: center;
-        margin-bottom: 1em;
-    }
-    .text-gradient {
-        background-image: var(--accent-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 400%;
-        background-position: 0%;
-    }
-    .localesCercanos {
-        text-align: center;
-        margin-bottom: 2rem;
-        border: 1px solid rgba(var(--accent-light), 25%);
-        background: linear-gradient(rgba(var(--accent-dark), 66%), rgba(var(--accent-dark), 33%));
-        padding: 1.5rem;
-        border-radius: 8px;
-    }
-    .instructions code {
-        font-size: 0.8em;
-        font-weight: bold;
-        background: rgba(var(--accent-light), 12%);
-        color: rgb(var(--accent-light));
-        border-radius: 4px;
-        padding: 0.3em 0.4em;
-    }
-    .instructions strong {
-        color: rgb(var(--accent-light));
-    }
-    .link-card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
-        gap: 2rem;
-        padding: 0;
-    }
     .link-card {
         list-style: none;
         padding: 1rem;

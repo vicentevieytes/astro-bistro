@@ -11,7 +11,8 @@ dotenv.config();
 const app = express(),
     SPREADSHEET_ID = process.env.SPREADSHEET_ID,
     INTEGRATION_ID = process.env.INTEGRATION_ID,
-    API_URL = process.env.API_URL;
+    API_URL = process.env.API_URL,
+    API_TOKEN = process.env.API_TOKEN;
 
 // Initialize cache with no TTL because the pollig mechanism will do it for us.
 const cache = new NodeCache();
@@ -49,23 +50,24 @@ async function fetchSheetData(sheetName) {
 
 // Definición de la función para actualizar la hoja de cálculo
 async function updateSheetData(sheetName, values) {
-    console.log('Aca está el error');
+    const processedValues = values.map(row => row.map(cell => String(cell)));
 
-    const response = await fetch(`${BASE_URL}/values/${sheetName}`, {
+    const response = await fetch(`${BASE_URL}/values/${sheetName}!A1:Z100?valueInputOption=RAW`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_TOKEN}`,
         },
         body: JSON.stringify({
-            // range: sheetName,
-            values: values,
+            values: processedValues,
         }),
     });
 
-    // console.log(response)
-
     if (!response.ok) {
-        throw new Error('Error al actualizar los datos en la hoja de cálculo');
+        const errorText = await response.text(); // Obtener detalles del error
+        console.error('Error response:', response.status, response.statusText);
+        console.error('Error details:', errorText);
+        throw new Error(`Error al actualizar los datos en la hoja de cálculo: ${response.statusText}`);
     }
 }
 
@@ -94,7 +96,7 @@ async function pollForChanges() {
 }
 
 // Set up polling to run every minute.
-setInterval(pollForChanges, 60000);
+setInterval(pollForChanges, 600000);
 
 async function fetchSheetDataWithCache(sheetName) {
     const cacheKey = `sheet_${sheetName}`;

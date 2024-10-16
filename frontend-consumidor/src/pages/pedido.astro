@@ -1,10 +1,10 @@
 ---
-// pedido.astro
 import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
+import '../styles/global.css';
 
 const urlParams = new URLSearchParams(Astro.url.search);
-const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+const localId = urlParams.get('id');
 
 let menuData = [],
     restauranteData = [];
@@ -13,7 +13,7 @@ if (localId) {
     const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
         responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
     restauranteData = await responseRestaurante.json();
-    menuData = await response.json(); // Obtener el menú desde el backend
+    menuData = await response.json();
 }
 
 console.log(restauranteData);
@@ -31,11 +31,11 @@ console.log(menuData);
                 <select id="dish" name="dish" required>
                     <option value="">--Selecciona--</option>
                     {
-                        menuData.map((dish) => (
-                            <option value={dish.id} key={dish.id}>
-                                {dish.name} - ${dish.price}
-                            </option>
-                        ))
+                        // menuData.map((dish) => (
+                        //     <option value={dish.id} key={dish.id}>
+                        //         {dish.name} - ${dish.price}
+                        //     </option>
+                        // ))
                     }
                 </select>
             </div>
