@@ -1,7 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Card from '../components/Card.astro';
-import type { Restaurante } from '../types/types'; // Asegúrate de la ruta correcta
 import '../styles/global.css';
 ---
 
@@ -15,63 +13,42 @@ import '../styles/global.css';
         <h1>
             Crea <span class="text-gradient">tu</span> restaurante
         </h1>
-        <!-- <form id="create-restaurant" action="/api/crear-restaurante" method="POST" enctype="multipart/form-data"> -->
-        <!-- Nombre del restaurante -->
-        <div class="form-group">
-            <label for="nombre">Nombre del restaurante:</label>
-            <input type="text" id="nombre" name="nombre" required placeholder="Nombre del restaurante" />
-        </div>
+        <form id="create-restaurant" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="nombre">Nombre del restaurante:</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Nombre del restaurante" />
+            </div>
 
-        <!-- Ubicación en el mapa -->
-        <div class="form-group">
-            <label for="map">Ubica tu restaurante en el mapa:</label>
-            <!-- <div id="map" style="height: 300px;"></div> -->
-            <div id="map" class="map-container" style="height: 500px;"></div>
-        </div>
+            <div class="form-group">
+                <label for="map">Ubica tu restaurante en el mapa:</label>
+                <div id="map" class="map-container" style="height: 500px;"></div>
+            </div>
 
-        <!-- <div class="form-group">
-            <label for="latitud">Latitud:</label>
-            <input type="text" id="latitud" name="latitud" readonly />
-        </div>
+            <div class="form-group">
+                <label for="descripcion">Descripcion</label>
+                <input
+                    type="text"
+                    id="descripcion"
+                    name="descripcion"
+                    placeholder="Ej: Atendemos de lunes a viernes, 9am - 6pm. Nuestro telefono es 11-nnnn-nnnn."
+                    required
+                />
+            </div>
 
-        <div class="form-group">
-            <label for="longitud">Longitud:</label>
-            <input type="text" id="longitud" name="longitud" readonly />
-        </div> -->
+            <div class="form-group">
+                <label for="carta">Publicar la carta del lugar:</label>
+                <div id="platos-container" class="platos-container">
+                    <div class="plato-item">
+                        <input type="text" name="platoNombre[]" placeholder="Nombre del plato" required />
+                        <input type="number" name="platoPrecio[]" placeholder="Precio" required />
+                        <button type="button" class="remove-plato-btn">Eliminar</button>
+                    </div>
+                </div>
+                <button type="button" id="add-plato-btn">Agregar otro plato</button>
+            </div>
 
-        <!-- Horarios y datos de contacto -->
-        <div class="form-group">
-            <label for="horarios">Descripcion</label>
-            <input
-                type="text"
-                id="horarios"
-                name="horarios"
-                placeholder="Ej: Atendemos de lunes a viernes, 9am - 6pm. Nuestro telefono es 11-nnnn-nnnn."
-                required
-            />
-        </div>
-
-        <!-- Publicar la carta -->
-        <div class="form-group">
-            <label for="carta">Publicar la carta del lugar:</label>
-            <textarea id="carta" name="carta" rows="5" placeholder="Describe los platos y bebidas" required></textarea>
-        </div>
-
-        <!-- Fotos y logo -->
-        <div class="form-group">
-            <label for="fotos">Fotos del restaurante y logo:</label>
-            <input type="file" id="fotos" name="fotos" multiple />
-        </div>
-
-        <!-- Identificar las mesas -->
-        <div class="form-group">
-            <label for="mesas">Identificación de las mesas (para los pedidos):</label>
-            <textarea id="mesas" name="mesas" rows="3" placeholder="Ej: Mesa 1, Mesa 2, etc." required></textarea>
-        </div>
-
-        <!-- Botón de envío -->
-        <button type="submit" class="btn">Crear restaurante</button>
-        <!-- </form> -->
+            <button type="submit" class="create-restaurante-btn">Crear restaurante</button>
+        </form>
     </main>
 </Layout>
 
@@ -150,36 +127,131 @@ import '../styles/global.css';
     button:hover {
         background-color: rgba(var(--accent-light), 0.8);
     }
+
+    /* Agregar platos al menú */
+    .plato-item {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .plato-item input {
+        padding: 0.5rem;
+        width: 100%;
+        max-width: 250px;
+    }
+    .remove-plato-btn {
+        padding: 0.5rem;
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #add-plato-btn {
+        background-color: green;
+        color: white;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
 </style>
 
 <script>
     import L from 'leaflet';
 
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializar el mapa centrado en una ubicación predeterminada
+    // Variables
+    const form = document.getElementById('create-restaurant') as HTMLFormElement;
+    const platosContainer = document.getElementById('platos-container');
+    const addPlatoBtn = document.getElementById('add-plato-btn');
+    let selectedLocation: L.LatLng | null = null;
+    let currentMarker: L.Marker | null = null;
+    interface Plato {
+        nombre: string;
+        precio: string;
+    }
 
-        const ciudadUniversitariaCoords = [-34.541895, -58.437618] as L.LatLngExpression,
-            map = L.map('map').setView(ciudadUniversitariaCoords, 15);
+    // Función para agregar un nuevo plato
+    addPlatoBtn?.addEventListener('click', () => {
+        const newPlato = document.createElement('div');
+        newPlato.classList.add('plato-item');
+        newPlato.innerHTML = `
+            <input type="text" name="platoNombre[]" placeholder="Nombre del plato" required />
+            <input type="number" name="platoPrecio[]" placeholder="Precio" required />
+            <button type="button" class="remove-plato-btn">Eliminar</button>
+        `;
+        platosContainer?.appendChild(newPlato);
 
-        // Añadir el tile layer de OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(map);
-
-        // Añadir un marcador al mapa
-        var marker = L.marker([51.505, -0.09]).addTo(map);
-
-        // Escuchar el evento de clic en el mapa
-        map.on('click', function (e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-
-            // Mover el marcador a la ubicación seleccionada
-            marker.setLatLng([lat, lng]);
-
-            // Actualizar los campos de latitud y longitud
-            // document.getElementById('latitud').value = lat;
-            // document.getElementById('longitud').value = lng;
+        // Agrega evento para eliminar el plato
+        newPlato.querySelector('.remove-plato-btn')?.addEventListener('click', function () {
+            newPlato.remove();
         });
+    });
+
+    const ciudadUniversitariaCoords = [-34.541895, -58.437618] as L.LatLngExpression,
+        map = L.map('map').setView(ciudadUniversitariaCoords, 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    map.on('click', function (e: L.LeafletMouseEvent) {
+        selectedLocation = e.latlng; // Guarda la latitud y longitud
+
+        // Si ya hay un marcador, eliminarlo del mapa
+        if (currentMarker) {
+            map.removeLayer(currentMarker);
+        }
+
+        // Crear un nuevo marcador en la ubicación seleccionada
+        currentMarker = L.marker(selectedLocation).addTo(map);
+
+        // Asociar el popup al nuevo marcador
+        currentMarker.openPopup();
+    });
+
+    // Manejar el envío del formulario
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Evita el envío del formulario por defecto
+
+        const nombreInput = document.getElementById('nombre') as HTMLInputElement;
+        const descripcionInput = document.getElementById('descripcion') as HTMLInputElement;
+
+        // Crear un objeto para almacenar los datos del restaurante
+        const restaurantData = {
+            nombre: nombreInput?.value,
+            latitud: String(selectedLocation?.lat),
+            longitud: String(selectedLocation?.lng),
+            descripcion: descripcionInput?.value,
+            platos: [] as Plato[],
+        };
+
+        // Seleccionar todos los elementos de entrada de platos
+        const platoItems = document.querySelectorAll('.plato-item');
+
+        platoItems.forEach((item) => {
+            const nombreInput = item.querySelector('input[name="platoNombre[]"]') as HTMLInputElement;
+            const precioInput = item.querySelector('input[name="platoPrecio[]"]') as HTMLInputElement;
+
+            const nombre = nombreInput.value;
+            const precio = precioInput.value;
+
+            restaurantData.platos.push({ nombre, precio });
+        });
+
+        console.log(restaurantData);
+
+        // Envía los datos al servidor
+        fetch('http://localhost:5001/crear-restaurante', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(restaurantData),
+        })
+            .then((response) => response.json())
+            .then((data) => console.log('Success:', data))
+            .catch((error) => console.error('Error:', error));
     });
 </script>

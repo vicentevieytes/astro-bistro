@@ -44,7 +44,7 @@ import '../styles/global.css';
 				const localesResponse = await fetch('http://localhost:5001/restaurante'),
 					localesData = (await localesResponse.json()) as restaurante[];
 
-				console.log(localesData);
+				// console.log(localesData);
 				// Agregar marcadores de locales cercanos con descripciones detalladas
 				localesData.forEach((local: restaurante) => {
 					const coords = [parseFloat(local.lat.replace(',', '.')), parseFloat(local.len.replace(',', '.'))] as L.LatLngExpression,
