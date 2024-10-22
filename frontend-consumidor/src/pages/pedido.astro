@@ -3,10 +3,12 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import '../styles/global.css';
 
+import type { itemMenu } from '../utils/CustomTypes';
+
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id');
 
-let menuData = [],
+let menuData: itemMenu[] = [],
     restauranteData = [];
 
 if (localId) {
@@ -14,6 +16,7 @@ if (localId) {
         responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
     restauranteData = await responseRestaurante.json();
     menuData = await response.json();
+
 }
 
 console.log(restauranteData);
@@ -31,11 +34,11 @@ console.log(menuData);
                 <select id="dish" name="dish" required>
                     <option value="">--Selecciona--</option>
                     {
-                        // menuData.map((dish) => (
-                        //     <option value={dish.id} key={dish.id}>
-                        //         {dish.name} - ${dish.price}
-                        //     </option>
-                        // ))
+                        menuData.map((dish: itemMenu) => (
+                            <option value={dish.id}>
+                                {dish.name} - ${dish.price}
+                            </option>
+                        ))
                     }
                 </select>
             </div>
