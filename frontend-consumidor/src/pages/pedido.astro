@@ -63,11 +63,9 @@ console.log(menuData);
     </main>
 </Layout>
 
-
-
-<!-- <script>
+<script>
     // Obtener elementos del DOM
-    const orderForm = document.getElementById('order-form');
+    const orderForm = document.getElementById('order-form') as HTMLFormElement;
     const summaryList = document.getElementById('summary-list');
     const totalPriceElement = document.getElementById('total-price');
 
@@ -75,29 +73,35 @@ console.log(menuData);
 
     orderForm?.addEventListener('submit', (event) => {
         event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-        const dishId = event?.target?.dishId.value;
-        const quantity = parseInt(event?.target?.quantity.value);
 
-        const selectedDish = [...document.querySelectorAll('#dish option')].find((option) => option.value === dishId);
+        const dishSelect = document.getElementById('dish') as HTMLSelectElement;
+        const quantityInput = document.getElementById('quantity') as HTMLInputElement;
+
+        const dishId = dishSelect.value;
+        const quantity = parseInt(quantityInput.value);
+
+        const selectedDish = dishSelect.options[dishSelect.selectedIndex];
 
         if (selectedDish) {
-            const dishName = selectedDish.textContent.split(' - ')[0]; // Obtener el nombre del plato
-            const dishPrice = parseFloat(selectedDish.textContent.split(' - $')[1]);
+            const dishName = selectedDish.textContent?.split(' - ')[0] || ''; // Obtener el nombre del plato
+            const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
             const itemTotal = dishPrice * quantity;
             totalPrice += itemTotal;
 
             // Agregar el item al resumen
             const listItem = document.createElement('li');
             listItem.textContent = `${dishName} - Cantidad: ${quantity} - Total: $${itemTotal.toFixed(2)}`;
-            summaryList.appendChild(listItem);
+            summaryList?.appendChild(listItem);
 
             // Actualizar el precio total
-            totalPriceElement.textContent = totalPrice.toFixed(2);
+            if (totalPriceElement) {
+                totalPriceElement.textContent = totalPrice.toFixed(2);
+            }
         }
 
         orderForm.reset(); // Resetear el formulario
     });
-</script> -->
+</script>
 
 <style>
     .form-card {
