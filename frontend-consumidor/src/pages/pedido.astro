@@ -3,20 +3,22 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import '../styles/global.css';
 
-import type { itemMenu } from '../utils/CustomTypes';
+import type { itemMenu, restaurante } from '../utils/CustomTypes';
 
 const urlParams = new URLSearchParams(Astro.url.search);
-const localId = urlParams.get('id');
+let localId = urlParams.get('id');
 
-let menuData: itemMenu[] = [],
-    restauranteData = [];
+let menuData: itemMenu[] = [];
+
+let restauranteData: restaurante = {} as restaurante;
+
+// TODO: Handle the case where the localId is invalid. Maybe show an error page.
 
 if (localId) {
     const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
         responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
-    restauranteData = await responseRestaurante.json();
+    restauranteData = (await responseRestaurante.json())[0];
     menuData = await response.json();
-
 }
 
 console.log(restauranteData);
@@ -26,7 +28,7 @@ console.log(menuData);
 <Layout title="Hacer Pedido">
     <main>
         <h1>
-            Hacer un pedido en <span class="text-gradient">{restauranteData?.name}</span>
+            Hacer un pedido en <span class="text-gradient">{restauranteData.name}</span>
         </h1>
         <form id="order-form" class="form-card">
             <div class="form-group">
@@ -60,6 +62,8 @@ console.log(menuData);
         </ul>
     </main>
 </Layout>
+
+
 
 <!-- <script>
     // Obtener elementos del DOM
