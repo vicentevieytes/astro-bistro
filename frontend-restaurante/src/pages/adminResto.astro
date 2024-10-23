@@ -1,0 +1,42 @@
+---
+import Card from '../components/Card.astro';
+import Layout from '../layouts/Layout.astro';
+import '../styles/global.css';
+
+// Obtener el ID del restaurante desde los parámetros de la URL
+const url = new URL(Astro.request.url),
+    localId = url.searchParams.get('id'),
+    response = await fetch(`http://localhost:5001/local?id=${localId}`),
+    data = await response.json(),
+    localData = data[0];
+
+console.log(data);
+---
+
+<Layout title="Administrar restaurante | Restaurantes">
+    <main>
+        <h1>
+            Administrar <span class="text-gradient">restaurante</span>
+        </h1>
+        <ul role="list" class="link-card">
+            <Card href={`/adminLocal?id=${localId}`} title="Gestionar Local" body="Configura la información de tu local." />
+            <Card href={`/adminMenu?id=${localId}`} title="Gestionar Menú" body="Administra los platos de tu menú." />
+            <Card href={`/comandas?id=${localId}`} title="Gestionar Comandas" body="Maneja las comandas de tus clientes." />
+        </ul>
+    </main>
+</Layout>
+
+<style>
+    /* Estilo para las cards */
+    .link-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem; /* Espacio entre las cards */
+    }
+
+    .link-card li {
+        list-style: none; /* Quitar viñetas de la lista */
+    }
+
+    /* Puedes añadir más estilos aquí según sea necesario */
+</style>

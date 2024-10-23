@@ -1,0 +1,57 @@
+---
+// Recibe las propiedades necesarias
+const { isOpen, onClose, onSubmit, item } = Astro.props;
+---
+
+{
+    isOpen && (
+        <div class="modal">
+            <div class="modal-content">
+                <span onclick={onClose} class="close">
+                    &times;
+                </span>
+                <h2>Editar Elemento del Menú</h2>
+                <input type="text" id="editName" placeholder="Nombre del plato" value={item.name} required />
+                <input type="text" id="editDescription" placeholder="Descripción" value={item.description} required />
+                <input type="number" id="editPrice" placeholder="Precio" value={item.price} required />
+                <button onclick={onSubmit}>Guardar Cambios</button>
+            </div>
+        </div>
+    )
+}
+
+<style>
+    .modal {
+        display: block; /* Mostrar por defecto */
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
