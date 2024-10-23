@@ -6,6 +6,7 @@ import '../styles/global.css';
 <head>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 
 <Layout title="Crear restaurante | Restaurantes">
@@ -39,12 +40,14 @@ import '../styles/global.css';
                 <label for="carta">Publicar la carta del lugar:</label>
                 <div id="platos-container" class="platos-container">
                     <div class="plato-item">
-                        <input type="text" name="platoNombre[]" placeholder="Nombre del plato" required />
-                        <input type="number" name="platoPrecio[]" placeholder="Precio" required />
-                        <button type="button" class="remove-plato-btn">Eliminar</button>
+                        <input type="text" name="platoNombre[]" class="plato-input" placeholder="Nombre del plato" required />
+                        <input type="number" name="platoPrecio[]" class="plato-input" placeholder="Precio" required />
+                        <button type="button" class="remove-plato-btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 </div>
-                <button type="button" id="add-plato-btn">Agregar otro plato</button>
+                <button type="button" id="addPlatoBtn">Agregar otro plato</button>
             </div>
 
             <button type="submit" class="create-restaurante-btn">Crear restaurante</button>
@@ -52,119 +55,13 @@ import '../styles/global.css';
     </main>
 </Layout>
 
-<style>
-    main {
-        margin: auto;
-        padding: 1rem;
-        width: 800px;
-        max-width: calc(100% - 2rem);
-        color: white;
-        font-size: 20px;
-        line-height: 1.6;
-    }
-
-    h1 {
-        font-size: 4rem;
-        font-weight: 700;
-        line-height: 1;
-        text-align: center;
-        margin-bottom: 1em;
-    }
-
-    .text-gradient {
-        background-image: var(--accent-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 400%;
-        background-position: 0%;
-    }
-
-    .restaurant-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        margin-top: 2rem;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    label {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-
-    input[type='text'],
-    textarea {
-        padding: 0.5rem;
-        border: 1px solid rgba(var(--accent-light), 50%);
-        border-radius: 4px;
-        background-color: rgba(var(--accent-dark), 50%);
-        color: white;
-        font-size: 1em;
-    }
-
-    .map-container {
-        height: 500px; /* Mantener la altura que ya tenías */
-        border-radius: 15px; /* Bordes redondeados */
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra */
-        overflow: hidden; /* Para que los bordes redondeados funcionen correctamente */
-    }
-
-    button {
-        background-color: var(--accent-light);
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-        font-size: 1em;
-        border-radius: 4px;
-        transition: background-color 0.3s;
-    }
-
-    button:hover {
-        background-color: rgba(var(--accent-light), 0.8);
-    }
-
-    /* Agregar platos al menú */
-    .plato-item {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .plato-item input {
-        padding: 0.5rem;
-        width: 100%;
-        max-width: 250px;
-    }
-    .remove-plato-btn {
-        padding: 0.5rem;
-        background-color: red;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    #add-plato-btn {
-        background-color: green;
-        color: white;
-        padding: 0.5rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-</style>
-
 <script>
     import L from 'leaflet';
 
     // Variables
     const form = document.getElementById('create-restaurant') as HTMLFormElement;
+    const addPlatoBtn = document.getElementById('addPlatoBtn');
     const platosContainer = document.getElementById('platos-container');
-    const addPlatoBtn = document.getElementById('add-plato-btn');
     let selectedLocation: L.LatLng | null = null;
     let currentMarker: L.Marker | null = null;
     interface Plato {
@@ -176,14 +73,19 @@ import '../styles/global.css';
     addPlatoBtn?.addEventListener('click', () => {
         const newPlato = document.createElement('div');
         newPlato.classList.add('plato-item');
+        newPlato.setAttribute('data-astro-cid-ardmnaja', '');
+
         newPlato.innerHTML = `
-            <input type="text" name="platoNombre[]" placeholder="Nombre del plato" required />
-            <input type="number" name="platoPrecio[]" placeholder="Precio" required />
-            <button type="button" class="remove-plato-btn">Eliminar</button>
-        `;
+        <input type="text" name="platoNombre[]" class="plato-input" placeholder="Nombre del plato"  data-astro-cid-ardmnaja="" required />
+        <input type="number" name="platoPrecio[]" class="plato-input" placeholder="Precio"  data-astro-cid-ardmnaja="" required />
+        <button type="button" class="remove-plato-btn" data-astro-cid-ardmnaja="">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    `;
+
         platosContainer?.appendChild(newPlato);
 
-        // Agrega evento para eliminar el plato
+        // Agregar evento para eliminar el plato
         newPlato.querySelector('.remove-plato-btn')?.addEventListener('click', function () {
             newPlato.remove();
         });
@@ -240,8 +142,6 @@ import '../styles/global.css';
             restaurantData.platos.push({ nombre, precio });
         });
 
-        console.log(restaurantData);
-
         // Envía los datos al servidor
         fetch('http://localhost:5001/crear-restaurante', {
             method: 'POST',
@@ -255,3 +155,171 @@ import '../styles/global.css';
             .catch((error) => console.error('Error:', error));
     });
 </script>
+
+<style>
+    main {
+        margin: auto;
+        padding: 1rem;
+        width: 800px;
+        max-width: calc(100% - 2rem);
+        color: white;
+        font-size: 20px;
+        line-height: 1.6;
+    }
+
+    h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        margin-bottom: 1em;
+    }
+
+    .text-gradient {
+        background-image: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 400%;
+        background-position: 0%;
+    }
+
+    .restaurant-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1.5rem; /* Espacio entre cada grupo del formulario */
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    input[type='text'],
+    textarea {
+        padding: 0.5rem;
+        border: 1px solid rgba(var(--accent-light), 50%);
+        border-radius: 4px;
+        background-color: rgba(var(--accent-dark), 50%);
+        color: white;
+        font-size: 1em;
+    }
+
+    .map-container {
+        height: 500px; /* Mantener la altura que ya tenías */
+        border-radius: 15px; /* Bordes redondeados */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra */
+        overflow: hidden; /* Para que los bordes redondeados funcionen correctamente */
+    }
+
+    button {
+        background-color: var(--accent-light);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 1em;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+        margin-top: 1rem; /* Espacio adicional sobre el botón */
+    }
+
+    button:hover {
+        background-color: rgba(var(--accent-light), 0.8);
+    }
+
+    /* Agregar platos al menú */
+    .platos-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    /* Estilos comunes para los inputs de nombre y precio */
+    .plato-input {
+        padding: 10px; /* Espaciado interno */
+        width: 100%; /* Ancho completo */
+        box-sizing: border-box; /* Incluir padding y borde en el ancho total */
+        font-size: 16px; /* Tamaño de fuente */
+        border: 1px solid #ccc; /* Borde */
+        border-radius: 4px; /* Bordes redondeados */
+        outline: none; /* Sin contorno */
+        height: 40px; /* Establecer una altura específica */
+    }
+
+    .remove-plato-btn {
+        background: none; /* Sin fondo */
+        border: none; /* Sin borde */
+        color: red; /* Color del icono */
+        font-size: 24px; /* Tamaño del icono */
+        cursor: pointer; /* Cambiar cursor al pasar sobre el botón */
+        height: 40px; /* Establecer la misma altura */
+        display: flex; /* Usar flexbox para centrar el icono */
+        align-items: center; /* Centrar verticalmente el icono */
+        margin-top: 0;
+    }
+
+    .plato-input:focus {
+        border-color: #007bff;
+    }
+
+    /* Eliminar las flechas de los inputs de tipo number */
+    input[type='number'] {
+        -moz-appearance: textfield;
+    }
+
+    input[type='number']::-webkit-outer-spin-button,
+    input[type='number']::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Estilos para el contenedor de cada plato */
+    .plato-item {
+        display: flex; /* Usar flexbox */
+        align-items: center; /* Alinear verticalmente los elementos */
+        gap: 10px; /* Espacio entre los elementos */
+        margin-bottom: 10px; /* Espaciado inferior entre los platos */
+        width: 100%; /* Ancho completo */
+    }
+
+    #add-plato-btn {
+        /* padding: 0.5rem; */
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .create-restaurante-btn {
+        background-color: var(--accent-light); /* Color de fondo */
+        color: white; /* Color del texto */
+        padding: 12px 24px; /* Espaciado interno */
+        border: none; /* Sin borde */
+        border-radius: 8px; /* Bordes redondeados */
+        font-size: 1.2em; /* Tamaño de la fuente */
+        font-weight: bold; /* Negrita para destacar el texto */
+        cursor: pointer; /* Cambiar cursor al pasar sobre el botón */
+        transition:
+            background-color 0.3s,
+            transform 0.3s; /* Transición suave */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra */
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .create-restaurante-btn:hover {
+        background-color: rgba(var(--accent-light), 0.8); /* Color de fondo al pasar el mouse */
+        transform: translateY(-2px); /* Efecto de elevación */
+    }
+
+    .create-restaurante-btn:active {
+        transform: translateY(0); /* Volver a la posición original al hacer clic */
+    }
+</style>
