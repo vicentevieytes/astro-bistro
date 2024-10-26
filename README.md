@@ -12,7 +12,6 @@ npm install
 
 Iniciar la base de datos:
 ```bash
-cp backend/.env.potgres backend/.env
 docker compose up
 ```
 
