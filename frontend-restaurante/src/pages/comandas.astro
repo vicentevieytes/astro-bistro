@@ -1,51 +1,4 @@
 ---
-// import Layout from '../layouts/Layout.astro';
-// import Card from '../components/Card.astro';
-// import type { Comanda, Producto, Estado } from '../types/types';
-// import '../styles/global.css';
-//
-// const urlParams = new URLSearchParams(Astro.url.search);
-// const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
-//
-// // Hacer fetch para obtener las comandas
-// let comandas = [];
-// const responseComandas = await fetch(`http://localhost:5001/comandas?id=${localId}`);
-// comandas = await responseComandas.json();
-//
-// // Hacer fetch para obtener los productos
-// const responseProducts = await fetch(`http://localhost:5001/menu?id=${localId}`);
-// const products = await responseProducts.json();
-//
-// // Hacer fetch para obtener todos los estados
-// const responseStates = await fetch('http://localhost:5001/Estado');
-// const estados = await responseStates.json();
-//
-// // Unir la información de las comandas con la información del producto
-// const comandasWithProductInfo = comandas.map((comanda: Comanda) => {
-//     console.log(comandas);
-//     console.log("HEHE")
-//
-//     console.log(comandas[0].items);
-//
-//     // Buscar el producto relacionado con la comanda actual
-//     const productInfo = products.find((product: Producto) => product.id === comanda.productId);
-//     const stateInfo = comandas.find((state: Estado) => state.id === comanda.state.id);
-//
-//     console.log(productInfo);
-//     console.log(stateInfo);
-//     console.log("PEPEPA")
-//     return {
-//         ...comanda,
-//         product: {
-//             id: productInfo.id,
-//             name: productInfo.name,
-//             price: productInfo.price,
-//             description: productInfo.description,
-//         },
-//         stateInfo,
-//     };
-// });
-
 import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import '../styles/global.css';
@@ -102,6 +55,7 @@ const estados = await responseStates.json();
             console.log(`Order ${orderId} status updated to ${newStatus}`);
         }
     });
+
 </script>
 
 <Layout title="Comandas">

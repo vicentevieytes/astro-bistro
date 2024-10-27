@@ -5,7 +5,7 @@
 -- Dumped from database version 16.1
 -- Dumped by pg_dump version 16.1
 
--- Started on 2024-10-26 21:44:52
+-- Started on 2024-10-27 04:13:47
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -407,7 +407,6 @@ COPY public.menu_items (item_id, restaurant_id, name, description, price, create
 --
 
 COPY public.order_items (order_item_id, order_id, item_id, quantity, price, created_at) FROM stdin;
-1	1	34	32	3.00	2024-10-26 21:05:38.308-03
 \.
 
 
@@ -444,7 +443,6 @@ COPY public.order_statuses (status_id, status_name) FROM stdin;
 --
 
 COPY public.orders (order_id, user_id, restaurant_id, status_id, created_at) FROM stdin;
-1	1	7	1	2024-10-26 21:05:38.299-03
 \.
 
 
@@ -493,7 +491,7 @@ SELECT pg_catalog.setval('public.menuitems_item_id_seq', 41, true);
 -- Name: orderitems_order_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.orderitems_order_item_id_seq', 1, true);
+SELECT pg_catalog.setval('public.orderitems_order_item_id_seq', 50, true);
 
 
 --
@@ -502,7 +500,7 @@ SELECT pg_catalog.setval('public.orderitems_order_item_id_seq', 1, true);
 -- Name: orders_order_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.orders_order_id_seq', 1, true);
+SELECT pg_catalog.setval('public.orders_order_id_seq', 13, true);
 
 
 --
@@ -694,7 +692,7 @@ ALTER TABLE ONLY public.order_status_history
     ADD CONSTRAINT orderstatushistory_status_id_fkey FOREIGN KEY (status_id) REFERENCES public.order_statuses(status_id);
 
 
--- Completed on 2024-10-26 21:44:52
+-- Completed on 2024-10-27 04:13:47
 
 --
 -- PostgreSQL database dump complete

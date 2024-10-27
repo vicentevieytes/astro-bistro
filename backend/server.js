@@ -14,11 +14,7 @@ import initModels from './orm_models/index.js';
 dotenv.config();
 
 // Initialize express app
-const app = express(),
-    SPREADSHEET_ID = process.env.SPREADSHEET_ID,
-    INTEGRATION_ID = process.env.INTEGRATION_ID,
-    API_URL = process.env.API_URL,
-    API_TOKEN = process.env.API_TOKEN;
+const app = express();
 
 // Initialize Sequelize
 const sequelize = new Sequelize('verLaCarta', 'postgres', process.env.DB_PASSWORD, {
@@ -33,22 +29,12 @@ try {
     console.log('Connection has been established successfully.');
 } catch (error) {
     console.error('Unable to connect to the database:', error);
-    // Let's finish the program: // TODO: Remove this, maybe retry.
+    // TODO: Remove this, maybe retry.
     process.exit(1);
 }
 
 const models = initModels(sequelize);
 sequelize.sync();
-
-const getOneRestaurant = async (id) => {
-    try {
-        const restaurant = await models.Restaurant.findByPk(id);
-        console.log(restaurant.toJSON());
-        return restaurant;
-    } catch (error) {
-        console.error('Error fetching restaurant:', error);
-    }
-};
 
 // Initialize cache with no TTL because the pollig mechanism will do it for us.
 const cache = new NodeCache();
@@ -71,102 +57,6 @@ const io = new Server(httpServer, {
 });
 
 
-const BASE_URL = `${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}`;
-const RESTAURANTE_SHEET_NAME = 'Restaurante';
-const MENU_SHEET_NAME = 'Menu';
-const COMANDA_SHEET_NAME = 'Comanda';
-const ESTADO_SHEET_NAME = 'Estado';
-
-const ALL_SHEET_NAMES = [RESTAURANTE_SHEET_NAME, MENU_SHEET_NAME, COMANDA_SHEET_NAME, ESTADO_SHEET_NAME];
-
-async function fetchSheetData(sheetName) {
-    try {
-        const response = await fetch(`${BASE_URL}/values/${sheetName}`);
-        console.log(`${BASE_URL}/values/${sheetName}`);
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        return data;
-    } catch (error) {
-        console.error(`Error fetching data from ${sheetName} sheet:`, error);
-        throw error;
-    }
-}
-
-// Definición de la función para actualizar la hoja de cálculo
-async function updateSheetData(sheetName, values) {
-    const processedValues = values.map(row => row.map(cell => String(cell)));
-
-    const response = await fetch(`${BASE_URL}/values/${sheetName}!A1:Z100?valueInputOption=RAW`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_TOKEN}`,
-        },
-        body: JSON.stringify({
-            values: processedValues,
-        }),
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text(); // Obtener detalles del error
-        console.error('Error response:', response.status, response.statusText);
-        console.error('Error details:', errorText);
-        throw new Error(`Error al actualizar los datos en la hoja de cálculo: ${response.statusText}`);
-    }
-}
-
-// Definición de la función para añadir datos a la hoja de cálculo
-async function appendSheetData(sheetName, values) {
-    const processedValues = values.map(row => row.map(cell => String(cell)));
-
-    const response = await fetch(`${BASE_URL}/values/${sheetName}!A1:append?valueInputOption=RAW`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_TOKEN}`,
-        },
-        body: JSON.stringify({
-            values: processedValues,
-        }),
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text(); // Obtener detalles del error
-        console.error('Error response:', response.status, response.statusText);
-        console.error('Error details:', errorText);
-        throw new Error(`Error al añadir los datos en la hoja de cálculo: ${response.statusText}`);
-    }
-
-    return await response.json(); // Devuelve la respuesta en caso de éxito
-}
-
-// // Function to check if the data has changed.
-// async function pollForChanges() {
-//     for (const sheetName of ALL_SHEET_NAMES) {
-//         try {
-//             const cacheKey = `sheet_${sheetName}`;
-//             const cachedData = cache.get(cacheKey);
-//             const currentData = await fetchSheetData(sheetName);
-//
-//             if (JSON.stringify(currentData) !== JSON.stringify(cachedData)) {
-//                 // Remove these logs if you feel like it.
-//                 // console.log(currentData);
-//                 // console.log('vs');
-//                 // console.log(cachedData);
-//                 // console.log(`Data for ${sheetName} has changed, updating cache.`);
-//                 cache.set(cacheKey, currentData);
-//             } else {
-//                 console.log(`No changes in data for ${sheetName}.`);
-//             }
-//         } catch (error) {
-//             console.error(`Error polling ${sheetName}:`, error);
-//         }
-//     }
-// }
-
 async function pollForDatabaseChanges() {
     try {
         await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
@@ -180,25 +70,6 @@ async function pollForDatabaseChanges() {
 
 // Set up polling to run every minute.
 setInterval(pollForDatabaseChanges, 600000);
-
-async function fetchSheetDataWithCache(sheetName) {
-    const cacheKey = `sheet_${sheetName}`;
-    const cachedData = cache.get(cacheKey);
-
-    if (cachedData) {
-        console.log(`Returning cached data for ${sheetName}`);
-        return cachedData;
-    }
-
-    try {
-        const data = await fetchSheetData(sheetName);
-        cache.set(cacheKey, data);
-        return data;
-    } catch (error) {
-        console.error(`Error fetching data from ${sheetName} sheet:`, error);
-        throw error;
-    }
-}
 
 const CACHE_KEYS = {
     RESTAURANTS: 'restaurants',
@@ -257,15 +128,6 @@ app.get('/Restaurante', async (req, res) => {
     }
 });
 
-
-app.get('/Estado', async (req, res) => {
-    try {
-        const data = await fetchSheetDataWithCache(ESTADO_SHEET_NAME);
-        res.send(convertToJSON(data.values));
-    } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
 
 // app.get('/local', async (req, res) => {
 //     const id = req.query.id;
@@ -387,94 +249,66 @@ app.get('/orderStatuses', async (req, res) => {
     }
 });
 
-app.post('/comanda/estado', async (req, res) => {
-    const { orderId, newStatusId } = req.body;
-
-    try {
-        const order = await models.Order.findByPk(orderId);
-        if (!order) {
-            return res.status(404).json({ error: 'Order not found' });
-        }
-
-        const newStatus = await models.OrderStatus.findByPk(newStatusId);
-        if (!newStatus) {
-            return res.status(404).json({ error: 'Invalid status' });
-        }
-
-        order.status_id = newStatusId;
-        await order.save();
-
-        // Optionally, you can add a new entry to OrderStatusHistory here if you decide to implement it later
-
-        res.status(200).json({ message: 'Order status updated successfully' });
-
-        // Emit a socket event to notify clients about the status change
-        io.emit('orderStatusUpdated', { orderId, newStatus: newStatus.status_name });
-
-    } catch (error) {
-        console.error('Error updating order status:', error);
-        res.status(500).json({ error: 'An error occurred while updating the order status' });
-    }
-});
-
 app.post('/crear-restaurante', async (req, res) => {
-    const { nombre, latitud, longitud, descripcion, platos } = req.body;
-
-    // Obtén los datos actuales de la hoja de cálculo
-    const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
-        
-    // Encuentra el máximo ID existente
-    const existingIds = data.values.map(row => row[0]); // Asumiendo que el ID está en la primera columna
-    const maxId = Math.max(...existingIds.filter(id => !isNaN(id)).map(Number)); // Filtrar y convertir a números
-    const newId = maxId + 1; // Generar nuevo ID
-
-    // Formato del objeto final
-    const restaurantData = {
-        id: newId,
-        nombre,
-        lat: latitud,
-        len: longitud,
-        descripcion,
-        platos
-    };
-
-    // Obtén los datos actuales de la hoja de cálculo para los platos
-    const menuData = await fetchSheetDataWithCache(MENU_SHEET_NAME);
-    
-    // Encuentra el máximo ID existente para los platos
-    const existingPlateIds = menuData.values.map(row => row[0]); // Asumiendo que el ID de plato está en la primera columna
-    const maxPlateId = Math.max(...existingPlateIds.filter(id => !isNaN(id)).map(Number)); // Filtrar y convertir a números
-
-    try {
-        // Formatear los datos para agregar a la hoja de cálculo
-        const formattedRestaurantData = [
-            restaurantData.id,
-            restaurantData.nombre,
-            restaurantData.lat,
-            restaurantData.len,
-            restaurantData.descripcion,
-        ];
-
-        // Llamar a la función que actualiza los datos en la hoja de cálculo
-        await appendSheetData(RESTAURANTE_SHEET_NAME, [formattedRestaurantData]);
-
-        const formattedPlatosData = platos.map((plato, index) => [
-            maxPlateId + index + 1,
-            restaurantData.id,
-            plato.nombre,
-            plato.precio,
-            plato.descripcion
-        ]);
-
-        // Llamar a la función que actualiza los datos en la hoja de cálculo del Menu
-        await appendSheetData(MENU_SHEET_NAME, formattedPlatosData);
-
-        // Enviar una respuesta exitosa
-        res.status(200).json({ message: 'Restaurante con su menu creado exitosamente' });
-    } catch (error) {
-        console.error('Error al crear el restaurante:', error);
-        res.status(500).json({ error: 'Ocurrió un error al crear el restaurante' });
-    }
+    // Let's throw an error because this is not implemented yet.
+    res.status(500).json({ error: 'Not implemented yet' });
+    // const { nombre, latitud, longitud, descripcion, platos } = req.body;
+    //
+    // // Obtén los datos actuales de la hoja de cálculo
+    // const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
+    //
+    // // Encuentra el máximo ID existente
+    // const existingIds = data.values.map(row => row[0]); // Asumiendo que el ID está en la primera columna
+    // const maxId = Math.max(...existingIds.filter(id => !isNaN(id)).map(Number)); // Filtrar y convertir a números
+    // const newId = maxId + 1; // Generar nuevo ID
+    //
+    // // Formato del objeto final
+    // const restaurantData = {
+    //     id: newId,
+    //     nombre,
+    //     lat: latitud,
+    //     len: longitud,
+    //     descripcion,
+    //     platos
+    // };
+    //
+    // // Obtén los datos actuales de la hoja de cálculo para los platos
+    // const menuData = await fetchSheetDataWithCache(MENU_SHEET_NAME);
+    //
+    // // Encuentra el máximo ID existente para los platos
+    // const existingPlateIds = menuData.values.map(row => row[0]); // Asumiendo que el ID de plato está en la primera columna
+    // const maxPlateId = Math.max(...existingPlateIds.filter(id => !isNaN(id)).map(Number)); // Filtrar y convertir a números
+    //
+    // try {
+    //     // Formatear los datos para agregar a la hoja de cálculo
+    //     const formattedRestaurantData = [
+    //         restaurantData.id,
+    //         restaurantData.nombre,
+    //         restaurantData.lat,
+    //         restaurantData.len,
+    //         restaurantData.descripcion,
+    //     ];
+    //
+    //     // Llamar a la función que actualiza los datos en la hoja de cálculo
+    //     await appendSheetData(RESTAURANTE_SHEET_NAME, [formattedRestaurantData]);
+    //
+    //     const formattedPlatosData = platos.map((plato, index) => [
+    //         maxPlateId + index + 1,
+    //         restaurantData.id,
+    //         plato.nombre,
+    //         plato.precio,
+    //         plato.descripcion
+    //     ]);
+    //
+    //     // Llamar a la función que actualiza los datos en la hoja de cálculo del Menu
+    //     await appendSheetData(MENU_SHEET_NAME, formattedPlatosData);
+    //
+    //     // Enviar una respuesta exitosa
+    //     res.status(200).json({ message: 'Restaurante con su menu creado exitosamente' });
+    // } catch (error) {
+    //     console.error('Error al crear el restaurante:', error);
+    //     res.status(500).json({ error: 'Ocurrió un error al crear el restaurante' });
+    // }
 });
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
@@ -553,7 +387,8 @@ io.on('connection', (socket) => {
 
             // TODO: Transform this data somewhere else.
             const response = {
-                id: fullOrderItem.order_item_id,
+                id: fullOrderItem.order_id, // TODO: We are sending the order id instead of the order_item_id.
+                                            //  We should send both.
                 name: fullOrderItem.MenuItem.name,
                 price: fullOrderItem.price,
                 quantity: fullOrderItem.quantity,
@@ -563,6 +398,21 @@ io.on('connection', (socket) => {
             };
 
             io.emit('cartUpdated', response);
+
+            // TODO: THIS IS NOT IMPLEMENTED YET: Emit something to update the comanda too.
+            io.emit('newOrderCreated', {
+                id: order.order_id,
+                user: order.user_id.username || 'Jorge', // Jorge is there for debugging purposes
+                status: pendingStatus.status_name,
+                items: [{
+                    productId: orderItem.item_id,
+                    name: fullOrderItem.MenuItem.name,
+                    quantity: orderItem.quantity,
+                    comments: 'Sin comentarios' // TODO: Allow users to add comments
+                }],
+                created_at: order.created_at
+            });
+
 
         } catch (error) {
             console.error('Error adding item to cart:', error);
@@ -632,6 +482,9 @@ io.on('connection', (socket) => {
             await order.save();
 
             console.log("Order status updated successfully");
+
+            console.log(orderId)
+
 
             io.emit('orderStatusUpdated', {
                 orderId,
