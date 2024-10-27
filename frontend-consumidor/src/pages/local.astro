@@ -10,10 +10,11 @@ import { OrderStatus } from '../types/types';
 const url = new URL(Astro.request.url),
 	localId = url.searchParams.get('id'),
 	response = await fetch(`http://localhost:5001/local?id=${localId}`),
-	data = await response.json(),
-	localData = data[0];
+	localData: Restaurante = await response.json();
+	// localData = data[0];
 
-console.log(data);
+// console.log(data);
+// console.log("AAA")
 ---
 
 <Layout title="Restaurant">
@@ -21,7 +22,7 @@ console.log(data);
 		<Cart />
 
 		<h1>
-			Bienvenido a <span class="text-gradient">{localData.name}</span>
+			Bienvenido a <span class="text-gradient">{localData.restaurant_name}</span>
 		</h1>
 		<ul role="list" class="link-card-grid">
 			<Card

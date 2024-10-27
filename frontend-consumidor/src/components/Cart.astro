@@ -26,6 +26,9 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
     return acc;
 }, {});
 
+console.log(initialItems)
+console.log(groupedItems);
+
 ---
 
 <div id="order-cart">
@@ -90,6 +93,7 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
 
         function renderCart() {
             if (cartDiv) {
+                console.log(cartItems)
                 const groupedItems = cartItems.reduce((acc, item) => {
                     if (!acc[item.restaurantId]) {
                         acc[item.restaurantId] = {
@@ -101,8 +105,12 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
                     return acc;
                     }, {});
 
+
+
                 let cartHTML = '<h2>Your Orders</h2>';
                 let grandTotal = 0;
+
+                console.log(groupedItems);
 
                 Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
                     cartHTML += `
@@ -113,6 +121,9 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
 
                     let restaurantTotal = 0;
                     restaurant.items.forEach(item => {
+                        console.log(item);
+                        // console.log("EEEE")
+
                         cartHTML += `
                         <li>
                             ${item.name} - Quantity: ${item.quantity} - Status: ${item.status}

@@ -143,32 +143,43 @@ async function appendSheetData(sheetName, values) {
     return await response.json(); // Devuelve la respuesta en caso de éxito
 }
 
-// Function to check if the data has changed.
-async function pollForChanges() {
-    for (const sheetName of ALL_SHEET_NAMES) {
-        try {
-            const cacheKey = `sheet_${sheetName}`;
-            const cachedData = cache.get(cacheKey);
-            const currentData = await fetchSheetData(sheetName);
+// // Function to check if the data has changed.
+// async function pollForChanges() {
+//     for (const sheetName of ALL_SHEET_NAMES) {
+//         try {
+//             const cacheKey = `sheet_${sheetName}`;
+//             const cachedData = cache.get(cacheKey);
+//             const currentData = await fetchSheetData(sheetName);
+//
+//             if (JSON.stringify(currentData) !== JSON.stringify(cachedData)) {
+//                 // Remove these logs if you feel like it.
+//                 // console.log(currentData);
+//                 // console.log('vs');
+//                 // console.log(cachedData);
+//                 // console.log(`Data for ${sheetName} has changed, updating cache.`);
+//                 cache.set(cacheKey, currentData);
+//             } else {
+//                 console.log(`No changes in data for ${sheetName}.`);
+//             }
+//         } catch (error) {
+//             console.error(`Error polling ${sheetName}:`, error);
+//         }
+//     }
+// }
 
-            if (JSON.stringify(currentData) !== JSON.stringify(cachedData)) {
-                // Remove these logs if you feel like it.
-                // console.log(currentData);
-                // console.log('vs');
-                // console.log(cachedData);
-                // console.log(`Data for ${sheetName} has changed, updating cache.`);
-                cache.set(cacheKey, currentData);
-            } else {
-                console.log(`No changes in data for ${sheetName}.`);
-            }
-        } catch (error) {
-            console.error(`Error polling ${sheetName}:`, error);
-        }
+async function pollForDatabaseChanges() {
+    try {
+        await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
+        await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
+        // Add similar calls for other entities (orders, order statuses)
+    } catch (error) {
+        console.error(`Error polling database:`, error);
     }
 }
 
+
 // Set up polling to run every minute.
-setInterval(pollForChanges, 600000);
+setInterval(pollForDatabaseChanges, 600000);
 
 async function fetchSheetDataWithCache(sheetName) {
     const cacheKey = `sheet_${sheetName}`;
@@ -189,14 +200,63 @@ async function fetchSheetDataWithCache(sheetName) {
     }
 }
 
+const CACHE_KEYS = {
+    RESTAURANTS: 'restaurants',
+    MENU_ITEMS: 'menu_items',
+    ORDERS: 'orders',
+    ORDER_STATUSES: 'order_statuses'
+};
+
+async function fetchDataWithCache(cacheKey, fetchFunction) {
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+        console.log(`Returning cached data for ${cacheKey}`);
+        return cachedData;
+    }
+
+    try {
+        console.log(`Fetching fresh data for ${cacheKey}`);
+        const data = await fetchFunction();
+        cache.set(cacheKey, data);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching data for ${cacheKey}:`, error);
+        throw error;
+    }
+}
+
+async function fetchRestaurantsFromDB() {
+    const restaurants = await models.Restaurant.findAll({
+        attributes: ['restaurant_id', 'restaurant_name', 'description', 'latitude', 'longitude', 'created_at']
+    });
+    return restaurants.map(restaurant => restaurant.get({ plain: true }));
+}
+
+async function fetchMenuItemsFromDB() {
+    const menuItems = await models.MenuItem.findAll();
+    return menuItems.map(item => item.get({ plain: true }));
+}
+
+
+// app.get('/Restaurante', async (req, res) => {
+//     try {
+//         const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
+//         res.send(convertToJSON(data.values));
+//     } catch (error) {
+//         res.status(500).json({ error: 'An error occurred while fetching data' });
+//     }
+// });
+
 app.get('/Restaurante', async (req, res) => {
     try {
-        const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
-        res.send(convertToJSON(data.values));
+        const restaurantsData = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
+        res.json(restaurantsData);
     } catch (error) {
+        console.error('Error fetching restaurants:', error);
         res.status(500).json({ error: 'An error occurred while fetching data' });
     }
 });
+
 
 app.get('/Estado', async (req, res) => {
     try {
@@ -207,27 +267,55 @@ app.get('/Estado', async (req, res) => {
     }
 });
 
+// app.get('/local', async (req, res) => {
+//     const id = req.query.id;
+//     try {
+//         const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
+//         const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
+//         res.send(convertToJSON(localData));
+//     } catch (error) {
+//         res.status(500).json({ error: 'An error occurred while fetching data' });
+//     }
+// });
+
 app.get('/local', async (req, res) => {
     const id = req.query.id;
     try {
-        const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
-        const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
-        res.send(convertToJSON(localData));
+        const restaurants = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
+        const restaurant = restaurants.find(r => r.restaurant_id === parseInt(id));
+        if (restaurant) {
+            res.json(restaurant);
+        } else {
+            res.status(404).json({ error: 'Restaurant not found' });
+        }
     } catch (error) {
         res.status(500).json({ error: 'An error occurred while fetching data' });
     }
 });
 
+
+// app.get('/menu', async (req, res) => {
+//     const id = req.query.id;
+//     try {
+//         const data = await fetchSheetDataWithCache(MENU_SHEET_NAME);
+//         const localData = data.values.filter((row) => row[1] === id || row[0] === 'id');
+//         res.send(convertToJSON(localData));
+//     } catch (error) {
+//         res.status(500).json({ error: 'An error occurred while fetching data' });
+//     }
+// });
+
 app.get('/menu', async (req, res) => {
-    const id = req.query.id;
+    const restaurantId = req.query.id;
     try {
-        const data = await fetchSheetDataWithCache(MENU_SHEET_NAME);
-        const localData = data.values.filter((row) => row[1] === id || row[0] === 'id');
-        res.send(convertToJSON(localData));
+        const menuItems = await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
+        const filteredItems = menuItems.filter(item => item.restaurant_id === parseInt(restaurantId));
+        res.json(filteredItems);
     } catch (error) {
         res.status(500).json({ error: 'An error occurred while fetching data' });
     }
 });
+
 
 app.get('/comandas', async (req, res) => {
     const id = req.query.id;
@@ -361,16 +449,6 @@ app.post('/invalidate-cache', (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-//
-//     // We poll at the very beginning to populate the cache
-//     pollForChanges();
-// });
-
-// Socket.io
-
-
 
 io.on('connection', (socket) => {
     console.log('A user connected');
@@ -384,20 +462,16 @@ io.on('connection', (socket) => {
                 throw new Error('Pending OrderStatus not found');
             }
 
-            let order = await models.Order.findOne({
-                where: {
-                    user_id: item.userId,
-                    status_id: pendingStatus.status_id  // Use the actual status_id from the database
-                }
+            // TODO: Allow different items to belong to the same order.
+
+            let order = await models.Order.create({
+                user_id: item.userId,
+                restaurant_id: item.restaurantId,
+                status_id: pendingStatus.status_id  // Use the actual status_id from the database
             });
 
-            if (!order) {
-                order = await models.Order.create({
-                    user_id: item.userId,
-                    restaurant_id: item.restaurantId,
-                    status_id: pendingStatus.status_id  // Use the actual status_id from the database
-                });
-            }
+            console.log(item);
+            console.log("EPA")
 
             const orderItem = await models.OrderItem.create({
                 order_id: order.order_id,
@@ -448,20 +522,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    // TODO: We also need to load the existing cart even if they closed the tab and reopened it, right?
-
     socket.on('fetchCart', async (userId) => {
         try {
-            const pendingStatus = await models.OrderStatus.findOne({ where: { status_name: 'Aguardando aceptación' } });
-
-            if (!pendingStatus) {
-                throw new Error('Pending OrderStatus not found');
-            }
-
-            const order = await models.Order.findOne({
+            const orders = await models.Order.findAll({
                 where: {
-                    user_id: userId,
-                    status_id: pendingStatus.status_id
+                    user_id: userId
                 },
                 include: [{
                     model: models.OrderItem,
@@ -478,8 +543,11 @@ io.on('connection', (socket) => {
                 }]
             });
 
-            if (order) {
-                const cartItems = order.OrderItems.map(item => ({
+            let cartItems = [];
+
+            // TODO: Transform this data somewhere else.
+            orders.forEach(order => {
+                const orderItems = order.OrderItems.map(item => ({
                     id: item.order_item_id,
                     name: item.MenuItem.name,
                     price: item.price,
@@ -488,16 +556,16 @@ io.on('connection', (socket) => {
                     restaurantId: order.Restaurant.restaurant_id,
                     restaurantName: order.Restaurant.restaurant_name
                 }));
+                cartItems = cartItems.concat(orderItems);
+            });
 
-                socket.emit('cartFetched', cartItems);
-            } else {
-                socket.emit('cartFetched', []);
-            }
+            socket.emit('cartFetched', cartItems);
         } catch (error) {
             console.error('Error fetching cart:', error);
             socket.emit('error', 'Failed to fetch cart');
         }
     });
+
 
 
     socket.on('updateOrderStatus', ({ orderId, newStatus }) => {
@@ -516,5 +584,5 @@ io.on('connection', (socket) => {
 // Replace app.listen with httpServer.listen
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    pollForChanges();
+    pollForDatabaseChanges();
 });

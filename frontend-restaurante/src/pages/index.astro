@@ -9,7 +9,8 @@ const urlParams = new URLSearchParams(Astro.url.search);
 let restaurantes = [];
 const responseRestaurante = await fetch(`http://localhost:5001/Restaurante`);
 restaurantes = await responseRestaurante.json();
-// console.log(restaurantes);
+console.log(restaurantes);
+console.log("EEEEEE")
 ---
 
 <Layout title="VerLaCarta | Restaurantes">
@@ -28,8 +29,8 @@ restaurantes = await responseRestaurante.json();
 				restaurantes.map((restaurante: Restaurante) => (
 					<li class="link-card">
 						<Card
-							href={`/comandas?id=${restaurante.id}`}
-							title={restaurante.name}
+							href={`/comandas?id=${restaurante.restaurant_id}`}
+							title={restaurante.restaurant_name}
 							body={restaurante.description || 'Descripción no disponible.'}
 						/>
 
