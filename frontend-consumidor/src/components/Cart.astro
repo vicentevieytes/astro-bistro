@@ -1,0 +1,123 @@
+---
+
+import { OrderStatus, type OrderItem } from '../types/types';
+
+interface RestaurantOrderItem extends OrderItem {
+    restaurantId: string;
+    restaurantName: string;
+}
+
+interface Props {
+    initialItems?: RestaurantOrderItem[];
+}
+
+
+const { initialItems = [] } = Astro.props;
+
+// Group items by restaurant
+const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
+    if (!acc[item.restaurantId]) {
+        acc[item.restaurantId] = {
+            name: item.restaurantName,
+            items: []
+        };
+    }
+    acc[item.restaurantId].items.push(item);
+    return acc;
+}, {});
+
+---
+
+<div id="order-cart">
+    <h2>Your Orders</h2>
+    {Object.entries(groupedItems).map(([restaurantId, restaurant]) => (
+            <div class="restaurant-order">
+                <h3>{restaurant.name}</h3>
+                <ul class="cart-items">
+                    {restaurant.items.map((item) => (
+                            <li>
+                                {item.name} - Quantity: {item.quantity} - Status: {item.status}
+                            </li>
+                    ))}
+                </ul>
+                <p>Restaurant Total: $<span class="restaurant-total">
+        {restaurant.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+      </span></p>
+            </div>
+    ))}
+    <p>Grand Total: $<span id="cart-total">
+    {initialItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+  </span></p>
+</div>
+
+
+<script>
+    import { io } from "socket.io-client";
+
+    const socket = io('http://localhost:5001');
+
+    let cartItems = [];
+    const cartDiv = document.getElementById('order-cart');
+
+    function updateCart(items) {
+        cartItems = items;
+        renderCart();
+    }
+
+    socket.on('cartUpdated', (item) => {
+        cartItems.push(item);
+        renderCart();
+    });
+
+    socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
+        const updatedItem = cartItems.find(item => item.id === orderId);
+        // TODO: Should we really get the items from cartItems?
+        if (updatedItem) {
+            updatedItem.status = newStatus;
+            renderCart();
+        }
+    });
+
+    function renderCart() {
+        if (cartDiv) {
+            const groupedItems = cartItems.reduce((acc, item) => {
+                if (!acc[item.restaurantId]) {
+                    acc[item.restaurantId] = {
+                        name: item.restaurantName,
+                        items: []
+                    };
+                }
+                acc[item.restaurantId].items.push(item);
+                return acc;
+            }, {});
+
+            let cartHTML = '<h2>Your Orders</h2>';
+            let grandTotal = 0;
+
+            Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
+                cartHTML += `<div class="restaurant-order">
+          <h3>${restaurant.name}</h3>
+          <ul class="cart-items">`;
+
+                let restaurantTotal = 0;
+                restaurant.items.forEach(item => {
+                    cartHTML += `<li>${item.name} - Quantity: ${item.quantity} - Status: ${item.status}</li>`;
+                    restaurantTotal += item.price * item.quantity;
+                });
+
+                cartHTML += `</ul>
+          <p>Restaurant Total: $<span class="restaurant-total">${restaurantTotal.toFixed(2)}</span></p>
+        </div>`;
+
+                grandTotal += restaurantTotal;
+            });
+
+            cartHTML += `<p>Grand Total: $<span id="cart-total">${grandTotal.toFixed(2)}</span></p>`;
+
+            cartDiv.innerHTML = cartHTML;
+        }
+    }
+
+    // Expose updateCart function globally
+    // window.updateCart = updateCart; // TODO: Stop using window.updateCart
+</script>

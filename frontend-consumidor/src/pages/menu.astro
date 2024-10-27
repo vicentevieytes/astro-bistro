@@ -4,6 +4,9 @@ import Layout from '../layouts/Layout.astro';
 import '../styles/global.css';
 import type { itemMenu, restaurante } from '../utils/CustomTypes';
 
+import Cart from '../components/Cart.astro';
+import { OrderStatus } from '../types/types';
+
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
 
@@ -20,6 +23,8 @@ if (localId) {
 
 <Layout title="Menú del Restaurante">
 	<main>
+		<Cart />
+
 		<h1>{(restauranteData[0] as restaurante).name}</h1>
 		<ul role="list" class="link-card-grid">
 			<Card href=`../local?id=${localId}` title="Volver" body="Volver a la página del restaurante" />
@@ -65,3 +70,11 @@ if (localId) {
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 	}
 </style>
+
+<script define:vars={{ OrderStatus }}>
+	// Load cart items on page load
+	window.addEventListener('load', () => {
+		const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+		window.updateCart(cartItems);
+	});
+</script>

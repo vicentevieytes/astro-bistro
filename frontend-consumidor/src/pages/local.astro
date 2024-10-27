@@ -3,6 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import '../styles/global.css';
 
+import Cart from '../components/Cart.astro';
+import { OrderStatus } from '../types/types';
+
+
 const url = new URL(Astro.request.url),
 	localId = url.searchParams.get('id'),
 	response = await fetch(`http://localhost:5001/local?id=${localId}`),
@@ -14,6 +18,8 @@ console.log(data);
 
 <Layout title="Restaurant">
 	<main>
+		<Cart />
+
 		<h1>
 			Bienvenido a <span class="text-gradient">{localData.name}</span>
 		</h1>
@@ -30,3 +36,13 @@ console.log(data);
 		</ul>
 	</main>
 </Layout>
+
+// TODO: Find a way to get the cart items
+
+<!--<script define:vars={{ OrderStatus }}>-->
+<!--	// Load cart items on page load-->
+<!--	window.addEventListener('load', () => {-->
+<!--		const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');-->
+<!--		window.updateCart(cartItems);-->
+<!--	});-->
+<!--</script>-->

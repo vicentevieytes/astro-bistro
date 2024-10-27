@@ -3,7 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import '../styles/global.css';
 
+import Cart from '../components/Cart.astro';
+
+
 import type { itemMenu, restaurante } from '../utils/CustomTypes';
+
+import { OrderStatus } from '../types/types';
+
 
 const urlParams = new URLSearchParams(Astro.url.search);
 let localId = urlParams.get('id');
@@ -27,11 +33,17 @@ console.log(menuData);
 
 <Layout title="Hacer Pedido">
     <main>
+        <Cart />
         <h1>
             Hacer un pedido en <span class="text-gradient">{restauranteData.name}</span>
         </h1>
-        <form id="order-form" class="form-card">
-            <div class="form-group">
+        <!--<form id="order-form" class="form-card">-->
+        <form id="order-form"
+              class="form-card"
+              data-local-id={localId}
+              data-restaurant-name={restauranteData.name}>
+
+        <div class="form-group">
                 <label for="dish">Selecciona tu plato:</label>
                 <select id="dish" name="dish" required>
                     <option value="">--Selecciona--</option>
@@ -64,42 +76,98 @@ console.log(menuData);
 </Layout>
 
 <script>
+
+    document?.addEventListener('submit', (event) => { // TODO: Is this useful? Remove and check.
+        event.preventDefault();
+    });
+
+    import { OrderStatus } from '../types/types';
+    import { io } from "socket.io-client";
+
+    const socket = io('http://localhost:5001');
+
+    // // Load cart items on page load
+    // window.addEventListener('load', () => {
+    //     const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    //     if (typeof window.updateCart === 'function') {
+    //         window.updateCart(cartItems);
+    //     }
+    // });
+
+
     // Obtener elementos del DOM
     const orderForm = document.getElementById('order-form') as HTMLFormElement;
-    const summaryList = document.getElementById('summary-list');
-    const totalPriceElement = document.getElementById('total-price');
 
-    let totalPrice = 0; // Total inicial del pedido
+    document.addEventListener('DOMContentLoaded', () => {
+        const summaryList = document.getElementById('summary-list');
+        const totalPriceElement = document.getElementById('total-price');
 
-    orderForm?.addEventListener('submit', (event) => {
-        event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+        let totalPrice = 0; // Total inicial del pedido
 
-        const dishSelect = document.getElementById('dish') as HTMLSelectElement;
-        const quantityInput = document.getElementById('quantity') as HTMLInputElement;
+        orderForm?.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
 
-        const dishId = dishSelect.value;
-        const quantity = parseInt(quantityInput.value);
+            const dishSelect = document.getElementById('dish') as HTMLSelectElement;
+            const quantityInput = document.getElementById('quantity') as HTMLInputElement;
 
-        const selectedDish = dishSelect.options[dishSelect.selectedIndex];
+            const dishId = dishSelect.value;
+            const quantity = parseInt(quantityInput.value);
 
-        if (selectedDish) {
-            const dishName = selectedDish.textContent?.split(' - ')[0] || ''; // Obtener el nombre del plato
-            const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
-            const itemTotal = dishPrice * quantity;
-            totalPrice += itemTotal;
+            const selectedDish = dishSelect.options[dishSelect.selectedIndex];
 
-            // Agregar el item al resumen
-            const listItem = document.createElement('li');
-            listItem.textContent = `${dishName} - Cantidad: ${quantity} - Total: $${itemTotal.toFixed(2)}`;
-            summaryList?.appendChild(listItem);
+            if (selectedDish) {
+                const dishName = selectedDish.textContent?.split(' - ')[0] || ''; // Obtener el nombre del plato
+                const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
+                const itemTotal = dishPrice * quantity;
+                totalPrice += itemTotal;
 
-            // Actualizar el precio total
-            if (totalPriceElement) {
-                totalPriceElement.textContent = totalPrice.toFixed(2);
+                const localId = orderForm?.dataset.localId;
+                const restaurantName = orderForm?.dataset.restaurantName;
+
+                // TODO: This is hardcoded for now:
+                const userId = 1;
+
+                // Create new item
+                // By default, new items should be in the 'pending' status
+                const newItem = {
+                    id: dishId,
+                    userId: userId,
+                    name: dishName,
+                    price: dishPrice,
+                    quantity: quantity,
+                    restaurantId: localId,
+                    restaurantName: restaurantName
+                };
+
+                // const existingItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                // existingItems.push(newItem);
+                // localStorage.setItem('cartItems', JSON.stringify(existingItems));
+
+
+                socket.emit('addToCart', newItem);
+
+                // if (typeof window.updateCart === 'function') {
+                //     window.updateCart(existingItems);
+                // }
+                // else {
+                //     console.error('updateCart function not found');
+                // }
+
+                // TODO: Remove the following because the cart will be used to check the status of the order.
+
+                // Agregar el item al resumen
+                const listItem = document.createElement('li');
+                listItem.textContent = `${dishName} - Cantidad: ${quantity} - Total: $${itemTotal.toFixed(2)}`;
+                summaryList?.appendChild(listItem);
+
+                // Actualizar el precio total
+                if (totalPriceElement) {
+                    totalPriceElement.textContent = totalPrice.toFixed(2);
+                }
             }
-        }
 
-        orderForm.reset(); // Resetear el formulario
+            orderForm.reset(); // Resetear el formulario
+        });
     });
 </script>
 

@@ -5,6 +5,12 @@ import dotenv from 'dotenv';
 import { convertToJSON } from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
 
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
+import { Sequelize, DataTypes } from 'sequelize';
+import initModels from './orm_models/index.js';
+
 dotenv.config();
 
 // Initialize express app
@@ -13,6 +19,36 @@ const app = express(),
     INTEGRATION_ID = process.env.INTEGRATION_ID,
     API_URL = process.env.API_URL,
     API_TOKEN = process.env.API_TOKEN;
+
+// Initialize Sequelize
+const sequelize = new Sequelize('verLaCarta', 'postgres', process.env.DB_PASSWORD, {
+    host: 'localhost',
+    dialect: 'postgres',
+    port: 5432,
+});
+
+// Test the connection
+try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+} catch (error) {
+    console.error('Unable to connect to the database:', error);
+    // Let's finish the program: // TODO: Remove this, maybe retry.
+    process.exit(1);
+}
+
+const models = initModels(sequelize);
+sequelize.sync();
+
+const getOneRestaurant = async (id) => {
+    try {
+        const restaurant = await models.Restaurant.findByPk(id);
+        console.log(restaurant.toJSON());
+        return restaurant;
+    } catch (error) {
+        console.error('Error fetching restaurant:', error);
+    }
+};
 
 // Initialize cache with no TTL because the pollig mechanism will do it for us.
 const cache = new NodeCache();
@@ -26,6 +62,15 @@ app.use(
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true })); // Para manejar datos de formularios
 
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: ['http://localhost:4321', 'http://localhost:4322'],
+        methods: ['GET', 'POST']
+    }
+});
+
+
 const BASE_URL = `${API_URL}${INTEGRATION_ID}/${SPREADSHEET_ID}`;
 const RESTAURANTE_SHEET_NAME = 'Restaurante';
 const MENU_SHEET_NAME = 'Menu';
@@ -37,6 +82,7 @@ const ALL_SHEET_NAMES = [RESTAURANTE_SHEET_NAME, MENU_SHEET_NAME, COMANDA_SHEET_
 async function fetchSheetData(sheetName) {
     try {
         const response = await fetch(`${BASE_URL}/values/${sheetName}`);
+        console.log(`${BASE_URL}/values/${sheetName}`);
         const data = await response.json();
 
         if (data.error) {
@@ -107,10 +153,10 @@ async function pollForChanges() {
 
             if (JSON.stringify(currentData) !== JSON.stringify(cachedData)) {
                 // Remove these logs if you feel like it.
-                console.log(currentData);
-                console.log('vs');
-                console.log(cachedData);
-                console.log(`Data for ${sheetName} has changed, updating cache.`);
+                // console.log(currentData);
+                // console.log('vs');
+                // console.log(cachedData);
+                // console.log(`Data for ${sheetName} has changed, updating cache.`);
                 cache.set(cacheKey, currentData);
             } else {
                 console.log(`No changes in data for ${sheetName}.`);
@@ -315,9 +361,82 @@ app.post('/invalidate-cache', (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+//
+//     // We poll at the very beginning to populate the cache
+//     pollForChanges();
+// });
 
-    // We poll at the very beginning to populate the cache
+// Socket.io
+
+
+
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // TODO: We also need to load the existing cart even if they closed the tab and reopened it, right?
+
+    socket.on('addToCart', async (item) => {
+        try {
+            // First, make sure we have a valid OrderStatus for Pending orders
+            const pendingStatus = await models.OrderStatus.findOne({ where: { status_name: 'Aguardando aceptación' } });
+
+            if (!pendingStatus) {
+                throw new Error('Pending OrderStatus not found');
+            }
+
+            let order = await models.Order.findOne({
+                where: {
+                    user_id: item.userId,
+                    status_id: pendingStatus.status_id  // Use the actual status_id from the database
+                }
+            });
+
+            if (!order) {
+                order = await models.Order.create({
+                    user_id: item.userId,
+                    restaurant_id: item.restaurantId,
+                    status_id: pendingStatus.status_id  // Use the actual status_id from the database
+                });
+            }
+
+            const orderItem = await models.OrderItem.create({
+                order_id: order.order_id,
+                item_id: item.id,
+                quantity: item.quantity,
+                price: item.price
+            });
+
+            const fullOrderItem = await models.OrderItem.findOne({
+                where: { order_item_id: orderItem.order_item_id },
+                include: [models.MenuItem]
+            });
+
+            io.emit('cartUpdated', fullOrderItem);
+        } catch (error) {
+            console.error('Error adding item to cart:', error);
+            socket.emit('error', 'Failed to add item to cart');
+        }
+    });
+
+
+
+    socket.on('updateOrderStatus', ({ orderId, newStatus }) => {
+        // Update order status in your database
+        // Then emit the update to all clients
+        console.log('TODO: Update order status:', orderId, newStatus);
+        io.emit('orderStatusUpdated', { orderId, newStatus });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected. Ideally this should happen only when the user closes the tab.');
+    });
+});
+
+
+// Replace app.listen with httpServer.listen
+httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
     pollForChanges();
 });

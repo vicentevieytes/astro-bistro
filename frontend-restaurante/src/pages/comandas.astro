@@ -40,13 +40,17 @@ const comandasWithProductInfo = comandas.map((comanda: Comanda) => {
 ---
 
 <script>
+
+    import { io } from "socket.io-client";
+    const socket = io('http://localhost:5001');
+
     document.querySelectorAll('select[name^="estado-"]').forEach((select) => {
         select.addEventListener('change', function (event) {
             const target = event.target as HTMLSelectElement; // Aserción de tipo
             const comandaId = parseInt(target.id.split('-')[1]); // Obtiene el ID de la comanda
             const productId = parseInt(target.id.split('-')[2]); // Obtiene el ID del producto
             const newStateId = parseInt(target.value);
-
+            console.log("State changed");
             handleStateChange(comandaId, productId, newStateId);
         });
     });
