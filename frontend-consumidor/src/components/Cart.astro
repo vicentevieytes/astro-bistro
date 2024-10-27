@@ -57,93 +57,95 @@ console.log(groupedItems);
 <script>
     import { io } from "socket.io-client";
 
-        const socket = io('http://localhost:5001');
-        let cartItems = [];
-        const cartDiv = document.getElementById('order-cart');
+    const socket = io('http://localhost:5001');
+    let cartItems = [];
+    const cartDiv = document.getElementById('order-cart');
 
-        // Fetch cart items when the component mounts
-        document.addEventListener('DOMContentLoaded', () => {
-            // TODO: Replace this with actual user ID when you implement authentication
-            const userId = 1;
-            socket.emit('fetchCart', userId);
+    // Fetch cart items when the component mounts
+    document.addEventListener('DOMContentLoaded', () => {
+        // TODO: Replace this with actual user ID when you implement authentication
+        const userId = 1;
+        socket.emit('fetchCart', userId);
+    });
+
+    socket.on('cartFetched', (items) => {
+        cartItems = items;
+        renderCart();
+    });
+
+    socket.on('cartUpdated', (item) => {
+        const existingItemIndex = cartItems.findIndex(i => i.id === item.id);
+        if (existingItemIndex !== -1) {
+            cartItems[existingItemIndex] = item;
+        } else {
+            cartItems.push(item);
+        }
+        renderCart();
+    });
+
+    socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
+        console.log("Order status update received", orderId, newStatus);
+        // Find all items that belong to the updated order
+        console.log(cartItems)
+        const updatedItems = cartItems.filter(item => item.id === orderId);
+        if (updatedItems.length > 0) {
+            console.log("We are here")
+            updatedItems.forEach(item => {
+                item.status = newStatus;
             });
-
-        socket.on('cartFetched', (items) => {
-            cartItems = items;
             renderCart();
-            });
+        }
+    });
 
-        socket.on('cartUpdated', (item) => {
-            const existingItemIndex = cartItems.findIndex(i => i.id === item.id);
-            if (existingItemIndex !== -1) {
-                cartItems[existingItemIndex] = item;
-                } else {
-                cartItems.push(item);
+    function renderCart() {
+        console.log("We are rendering")
+        if (cartDiv) {
+            console.log("Rendering cart with items:", cartItems);
+            const groupedItems = cartItems.reduce((acc, item) => {
+                if (!acc[item.restaurantId]) {
+                    acc[item.restaurantId] = {
+                        name: item.restaurantName,
+                        items: []
+                    };
                 }
-            renderCart();
-            });
+                acc[item.restaurantId].items.push(item);
+                return acc;
+            }, {});
 
-        socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
-            const updatedItem = cartItems.find(item => item.id === orderId);
-            if (updatedItem) {
-                updatedItem.status = newStatus;
-                renderCart();
-                }
-            });
+            let cartHTML = '<h2>Your Orders</h2>';
+            let grandTotal = 0;
 
-        function renderCart() {
-            if (cartDiv) {
-                console.log(cartItems)
-                const groupedItems = cartItems.reduce((acc, item) => {
-                    if (!acc[item.restaurantId]) {
-                        acc[item.restaurantId] = {
-                            name: item.restaurantName,
-                            items: []
-                            };
-                        }
-                    acc[item.restaurantId].items.push(item);
-                    return acc;
-                    }, {});
-
-
-
-                let cartHTML = '<h2>Your Orders</h2>';
-                let grandTotal = 0;
-
-                console.log(groupedItems);
-
-                Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
-                    cartHTML += `
+            Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
+                cartHTML += `
                     <div class="restaurant-order">
                         <h3>${restaurant.name}</h3>
                         <ul class="cart-items">
                 `;
 
-                    let restaurantTotal = 0;
-                    restaurant.items.forEach(item => {
-                        console.log(item);
-                        // console.log("EEEE")
-
-                        cartHTML += `
+                let restaurantTotal = 0;
+                restaurant.items.forEach(item => {
+                    cartHTML += `
                         <li>
                             ${item.name} - Quantity: ${item.quantity} - Status: ${item.status}
+                            ${item.orderId ? ` (Order #${item.orderId})` : ''}
                         </li>
                     `;
-                        restaurantTotal += item.price * item.quantity;
-                        });
+                    restaurantTotal += item.price * item.quantity;
+                });
 
-                    cartHTML += `
+                cartHTML += `
                         </ul>
                         <p>Restaurant Total: $<span class="restaurant-total">${restaurantTotal.toFixed(2)}</span></p>
                     </div>
                 `;
 
-                    grandTotal += restaurantTotal;
-                    });
+                grandTotal += restaurantTotal;
+            });
 
-                cartHTML += `<p>Grand Total: $<span id="cart-total">${grandTotal.toFixed(2)}</span></p>`;
+            cartHTML += `<p>Grand Total: $<span id="cart-total">${grandTotal.toFixed(2)}</span></p>`;
 
-                cartDiv.innerHTML = cartHTML;
-                }
-            }
+            cartDiv.innerHTML = cartHTML;
+        }
+    }
+
 </script>

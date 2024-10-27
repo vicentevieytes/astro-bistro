@@ -317,55 +317,103 @@ app.get('/menu', async (req, res) => {
 });
 
 
+// app.get('/comandas', async (req, res) => {
+//     const id = req.query.id;
+//     try {
+//         const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
+//         const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
+//         res.send(convertToJSON(localData));
+//     } catch (error) {
+//         res.status(500).json({ error: 'An error occurred while fetching data' });
+//     }
+// });
+
 app.get('/comandas', async (req, res) => {
-    const id = req.query.id;
+    const restaurantId = req.query.id;
     try {
-        const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
-        const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
-        res.send(convertToJSON(localData));
+        const orders = await models.Order.findAll({
+            where: { restaurant_id: restaurantId },
+            include: [
+                {
+                    model: models.OrderItem,
+                    include: [
+                        {
+                            model: models.MenuItem,
+                            attributes: ['name']
+                        }
+                    ]
+                },
+                {
+                    model: models.OrderStatus,
+                    attributes: ['status_name']
+                },
+                {
+                    model: models.User,
+                    attributes: ['username']
+                }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+
+        const comandas = orders.map(order => ({
+            id: order.order_id,
+            user: order.User.username,
+            status: order.OrderStatus.status_name,
+            items: order.OrderItems.map(item => ({
+                productId: item.item_id,
+                name: item.MenuItem.name,
+                quantity: item.quantity,
+                comments: item.comments || 'Sin comentarios'
+            })),
+            created_at: order.created_at
+        }));
+
+        res.json(comandas);
     } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
+        console.error('Error fetching comandas:', error);
+        res.status(500).json({ error: 'An error occurred while fetching comandas' });
     }
 });
 
-app.get('/estado', async (req, res) => {
-    const id = req.query.id;
+app.get('/orderStatuses', async (req, res) => {
     try {
-        const data = await fetchSheetDataWithCache(ESTADO_SHEET_NAME);
-        const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
-        res.send(convertToJSON(localData));
+        const statuses = await models.OrderStatus.findAll({
+            attributes: ['status_id', 'status_name']
+        });
+        res.json(statuses);
     } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
+        console.error('Error fetching order statuses:', error);
+        res.status(500).json({ error: 'An error occurred while fetching order statuses' });
     }
 });
-
-//---
 
 app.post('/comanda/estado', async (req, res) => {
-    const { id, productId, stateId } = req.body;
+    const { orderId, newStatusId } = req.body;
 
     try {
-        // Obtener los datos actuales de la hoja de cálculo
-        const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
-
-        // Encontrar la fila que corresponde al ID de la comanda y al productId
-        const index = data.values.findIndex((row) => row[0] == parseInt(id) && row[1] == parseInt(productId));
-
-        if (index === -1) {
-            return res.status(404).json({ error: 'Comanda o Producto no encontrado' });
+        const order = await models.Order.findByPk(orderId);
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
         }
 
-        // Actualizar el estado de la comanda en la fila correspondiente
-        data.values[index][5] = stateId;
+        const newStatus = await models.OrderStatus.findByPk(newStatusId);
+        if (!newStatus) {
+            return res.status(404).json({ error: 'Invalid status' });
+        }
 
-        // Llamar a la función que actualiza los datos en la hoja de cálculo
-        await updateSheetData(COMANDA_SHEET_NAME, data.values);
+        order.status_id = newStatusId;
+        await order.save();
 
-        // Enviar una respuesta exitosa
-        res.status(200).json({ message: 'Estado actualizado correctamente' });
+        // Optionally, you can add a new entry to OrderStatusHistory here if you decide to implement it later
+
+        res.status(200).json({ message: 'Order status updated successfully' });
+
+        // Emit a socket event to notify clients about the status change
+        io.emit('orderStatusUpdated', { orderId, newStatus: newStatus.status_name });
+
     } catch (error) {
-        console.error('Error al actualizar el estado:', error);
-        res.status(500).json({ error: 'Ocurrió un error al actualizar el estado' });
+        console.error('Error updating order status:', error);
+        res.status(500).json({ error: 'An error occurred while updating the order status' });
     }
 });
 
@@ -548,7 +596,7 @@ io.on('connection', (socket) => {
             // TODO: Transform this data somewhere else.
             orders.forEach(order => {
                 const orderItems = order.OrderItems.map(item => ({
-                    id: item.order_item_id,
+                    id: item.order_id, // TODO: Maybe send the order_item_id too...
                     name: item.MenuItem.name,
                     price: item.price,
                     quantity: item.quantity,
@@ -566,17 +614,37 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('updateOrderStatus', async ({ orderId, newStatusId }) => {
+        try {
+            const order = await models.Order.findByPk(orderId, {
+                include: [{ model: models.OrderStatus }]
+            });
+            if (!order) {
+                throw new Error('Order not found');
+            }
 
+            const newStatus = await models.OrderStatus.findByPk(newStatusId);
+            if (!newStatus) {
+                throw new Error('Invalid status');
+            }
 
-    socket.on('updateOrderStatus', ({ orderId, newStatus }) => {
-        // Update order status in your database
-        // Then emit the update to all clients
-        console.log('TODO: Update order status:', orderId, newStatus);
-        io.emit('orderStatusUpdated', { orderId, newStatus });
+            order.status_id = newStatusId;
+            await order.save();
+
+            console.log("Order status updated successfully");
+
+            io.emit('orderStatusUpdated', {
+                orderId,
+                newStatus: newStatus.status_name
+            });
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            socket.emit('error', 'Failed to update order status');
+        }
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected. Ideally this should happen only when the user closes the tab.');
+        console.log('User disconnected.');
     });
 });
 
