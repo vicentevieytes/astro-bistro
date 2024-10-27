@@ -31,6 +31,7 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
 <div id="order-cart">
     <h2>Your Orders</h2>
     {Object.entries(groupedItems).map(([restaurantId, restaurant]) => (
+
             <div class="restaurant-order">
                 <h3>{restaurant.name}</h3>
                 <ul class="cart-items">

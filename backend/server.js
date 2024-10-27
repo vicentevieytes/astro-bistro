@@ -421,6 +421,10 @@ io.on('connection', (socket) => {
                             {
                                 model: models.OrderStatus,
                                 attributes: ['status_name']
+                            },
+                            {
+                                model: models.Restaurant,
+                                attributes: ['restaurant_id', 'restaurant_name']
                             }
                         ]
                     }
@@ -429,9 +433,13 @@ io.on('connection', (socket) => {
 
             // TODO: Transform this data somewhere else.
             const response = {
-                ...fullOrderItem.get({ plain: true }),
+                id: fullOrderItem.order_item_id,
+                name: fullOrderItem.MenuItem.name,
+                price: fullOrderItem.price,
+                quantity: fullOrderItem.quantity,
                 status: fullOrderItem.Order.OrderStatus.status_name,
-                name: fullOrderItem.MenuItem.name
+                restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
+                restaurantName: fullOrderItem.Order.Restaurant.restaurant_name
             };
 
             io.emit('cartUpdated', response);

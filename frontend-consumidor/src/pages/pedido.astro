@@ -139,31 +139,7 @@ console.log(menuData);
                     restaurantName: restaurantName
                 };
 
-                // const existingItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-                // existingItems.push(newItem);
-                // localStorage.setItem('cartItems', JSON.stringify(existingItems));
-
-
                 socket.emit('addToCart', newItem);
-
-                // if (typeof window.updateCart === 'function') {
-                //     window.updateCart(existingItems);
-                // }
-                // else {
-                //     console.error('updateCart function not found');
-                // }
-
-                // TODO: Remove the following because the cart will be used to check the status of the order.
-
-                // Agregar el item al resumen
-                const listItem = document.createElement('li');
-                listItem.textContent = `${dishName} - Cantidad: ${quantity} - Total: $${itemTotal.toFixed(2)}`;
-                summaryList?.appendChild(listItem);
-
-                // Actualizar el precio total
-                if (totalPriceElement) {
-                    totalPriceElement.textContent = totalPrice.toFixed(2);
-                }
             }
 
             orderForm.reset(); // Resetear el formulario
