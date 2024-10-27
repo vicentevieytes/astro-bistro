@@ -76,74 +76,46 @@ console.log(menuData);
 </Layout>
 
 <script>
-
-    document?.addEventListener('submit', (event) => { // TODO: Is this useful? Remove and check.
-        event.preventDefault();
-    });
-
-    import { OrderStatus } from '../types/types';
     import { io } from "socket.io-client";
 
     const socket = io('http://localhost:5001');
-
-    // // Load cart items on page load
-    // window.addEventListener('load', () => {
-    //     const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-    //     if (typeof window.updateCart === 'function') {
-    //         window.updateCart(cartItems);
-    //     }
-    // });
-
-
-    // Obtener elementos del DOM
     const orderForm = document.getElementById('order-form') as HTMLFormElement;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const summaryList = document.getElementById('summary-list');
-        const totalPriceElement = document.getElementById('total-price');
+    orderForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
 
-        let totalPrice = 0; // Total inicial del pedido
+        const dishSelect = document.getElementById('dish') as HTMLSelectElement;
+        const quantityInput = document.getElementById('quantity') as HTMLInputElement;
 
-        orderForm?.addEventListener('submit', (event) => {
-            event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+        const dishId = dishSelect.value;
+        const quantity = parseInt(quantityInput.value);
 
-            const dishSelect = document.getElementById('dish') as HTMLSelectElement;
-            const quantityInput = document.getElementById('quantity') as HTMLInputElement;
+        const selectedDish = dishSelect.options[dishSelect.selectedIndex];
 
-            const dishId = dishSelect.value;
-            const quantity = parseInt(quantityInput.value);
+        if (selectedDish) {
+            const dishName = selectedDish.textContent?.split(' - ')[0] || '';
+            const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
 
-            const selectedDish = dishSelect.options[dishSelect.selectedIndex];
+            const localId = orderForm?.dataset.localId;
+            const restaurantName = orderForm?.dataset.restaurantName;
 
-            if (selectedDish) {
-                const dishName = selectedDish.textContent?.split(' - ')[0] || ''; // Obtener el nombre del plato
-                const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
-                const itemTotal = dishPrice * quantity;
-                totalPrice += itemTotal;
+            // TODO: This is hardcoded for now:
+            const userId = 1;
 
-                const localId = orderForm?.dataset.localId;
-                const restaurantName = orderForm?.dataset.restaurantName;
+            const newItem = {
+                id: dishId,
+                userId: userId,
+                name: dishName,
+                price: dishPrice,
+                quantity: quantity,
+                restaurantId: localId,
+                restaurantName: restaurantName
+            };
 
-                // TODO: This is hardcoded for now:
-                const userId = 1;
+            socket.emit('addToCart', newItem);
+        }
 
-                // Create new item
-                // By default, new items should be in the 'pending' status
-                const newItem = {
-                    id: dishId,
-                    userId: userId,
-                    name: dishName,
-                    price: dishPrice,
-                    quantity: quantity,
-                    restaurantId: localId,
-                    restaurantName: restaurantName
-                };
-
-                socket.emit('addToCart', newItem);
-            }
-
-            orderForm.reset(); // Resetear el formulario
-        });
+        orderForm.reset();
     });
 </script>
 

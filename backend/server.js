@@ -375,8 +375,6 @@ const PORT = process.env.PORT || 5001;
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    // TODO: We also need to load the existing cart even if they closed the tab and reopened it, right?
-
     socket.on('addToCart', async (item) => {
         try {
             // First, make sure we have a valid OrderStatus for Pending orders
@@ -450,6 +448,56 @@ io.on('connection', (socket) => {
         }
     });
 
+    // TODO: We also need to load the existing cart even if they closed the tab and reopened it, right?
+
+    socket.on('fetchCart', async (userId) => {
+        try {
+            const pendingStatus = await models.OrderStatus.findOne({ where: { status_name: 'Aguardando aceptación' } });
+
+            if (!pendingStatus) {
+                throw new Error('Pending OrderStatus not found');
+            }
+
+            const order = await models.Order.findOne({
+                where: {
+                    user_id: userId,
+                    status_id: pendingStatus.status_id
+                },
+                include: [{
+                    model: models.OrderItem,
+                    include: [{
+                        model: models.MenuItem,
+                        attributes: ['name', 'description']
+                    }]
+                }, {
+                    model: models.Restaurant,
+                    attributes: ['restaurant_id', 'restaurant_name']
+                }, {
+                    model: models.OrderStatus,
+                    attributes: ['status_name']
+                }]
+            });
+
+            if (order) {
+                const cartItems = order.OrderItems.map(item => ({
+                    id: item.order_item_id,
+                    name: item.MenuItem.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    status: order.OrderStatus.status_name,
+                    restaurantId: order.Restaurant.restaurant_id,
+                    restaurantName: order.Restaurant.restaurant_name
+                }));
+
+                socket.emit('cartFetched', cartItems);
+            } else {
+                socket.emit('cartFetched', []);
+            }
+        } catch (error) {
+            console.error('Error fetching cart:', error);
+            socket.emit('error', 'Failed to fetch cart');
+        }
+    });
 
 
     socket.on('updateOrderStatus', ({ orderId, newStatus }) => {

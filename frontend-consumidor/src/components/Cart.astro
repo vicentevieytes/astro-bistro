@@ -51,75 +51,88 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
   </span></p>
 </div>
 
-
 <script>
     import { io } from "socket.io-client";
 
-    const socket = io('http://localhost:5001');
+        const socket = io('http://localhost:5001');
+        let cartItems = [];
+        const cartDiv = document.getElementById('order-cart');
 
-    let cartItems = [];
-    const cartDiv = document.getElementById('order-cart');
-
-    function updateCart(items) {
-        cartItems = items;
-        renderCart();
-    }
-
-    socket.on('cartUpdated', (item) => {
-        cartItems.push(item);
-        renderCart();
-    });
-
-    socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
-        const updatedItem = cartItems.find(item => item.id === orderId);
-        // TODO: Should we really get the items from cartItems?
-        if (updatedItem) {
-            updatedItem.status = newStatus;
-            renderCart();
-        }
-    });
-
-    function renderCart() {
-        if (cartDiv) {
-            const groupedItems = cartItems.reduce((acc, item) => {
-                if (!acc[item.restaurantId]) {
-                    acc[item.restaurantId] = {
-                        name: item.restaurantName,
-                        items: []
-                    };
-                }
-                acc[item.restaurantId].items.push(item);
-                return acc;
-            }, {});
-
-            let cartHTML = '<h2>Your Orders</h2>';
-            let grandTotal = 0;
-
-            Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
-                cartHTML += `<div class="restaurant-order">
-          <h3>${restaurant.name}</h3>
-          <ul class="cart-items">`;
-
-                let restaurantTotal = 0;
-                restaurant.items.forEach(item => {
-                    // TODO: Standardize the structs after the introduction of SQL schemas.
-                    cartHTML += `<li>${item.name}  - Quantity: ${item.quantity} - Status: ${item.status}</li>`;
-                    restaurantTotal += item.price * item.quantity;
-                });
-
-                cartHTML += `</ul>
-          <p>Restaurant Total: $<span class="restaurant-total">${restaurantTotal.toFixed(2)}</span></p>
-        </div>`;
-
-                grandTotal += restaurantTotal;
+        // Fetch cart items when the component mounts
+        document.addEventListener('DOMContentLoaded', () => {
+            // TODO: Replace this with actual user ID when you implement authentication
+            const userId = 1;
+            socket.emit('fetchCart', userId);
             });
 
-            cartHTML += `<p>Grand Total: $<span id="cart-total">${grandTotal.toFixed(2)}</span></p>`;
+        socket.on('cartFetched', (items) => {
+            cartItems = items;
+            renderCart();
+            });
 
-            cartDiv.innerHTML = cartHTML;
-        }
-    }
+        socket.on('cartUpdated', (item) => {
+            const existingItemIndex = cartItems.findIndex(i => i.id === item.id);
+            if (existingItemIndex !== -1) {
+                cartItems[existingItemIndex] = item;
+                } else {
+                cartItems.push(item);
+                }
+            renderCart();
+            });
 
-    // Expose updateCart function globally
-    // window.updateCart = updateCart; // TODO: Stop using window.updateCart
+        socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
+            const updatedItem = cartItems.find(item => item.id === orderId);
+            if (updatedItem) {
+                updatedItem.status = newStatus;
+                renderCart();
+                }
+            });
+
+        function renderCart() {
+            if (cartDiv) {
+                const groupedItems = cartItems.reduce((acc, item) => {
+                    if (!acc[item.restaurantId]) {
+                        acc[item.restaurantId] = {
+                            name: item.restaurantName,
+                            items: []
+                            };
+                        }
+                    acc[item.restaurantId].items.push(item);
+                    return acc;
+                    }, {});
+
+                let cartHTML = '<h2>Your Orders</h2>';
+                let grandTotal = 0;
+
+                Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
+                    cartHTML += `
+                    <div class="restaurant-order">
+                        <h3>${restaurant.name}</h3>
+                        <ul class="cart-items">
+                `;
+
+                    let restaurantTotal = 0;
+                    restaurant.items.forEach(item => {
+                        cartHTML += `
+                        <li>
+                            ${item.name} - Quantity: ${item.quantity} - Status: ${item.status}
+                        </li>
+                    `;
+                        restaurantTotal += item.price * item.quantity;
+                        });
+
+                    cartHTML += `
+                        </ul>
+                        <p>Restaurant Total: $<span class="restaurant-total">${restaurantTotal.toFixed(2)}</span></p>
+                    </div>
+                `;
+
+                    grandTotal += restaurantTotal;
+                    });
+
+                cartHTML += `<p>Grand Total: $<span id="cart-total">${grandTotal.toFixed(2)}</span></p>`;
+
+                cartDiv.innerHTML = cartHTML;
+                }
+            }
 </script>
