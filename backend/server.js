@@ -410,10 +410,32 @@ io.on('connection', (socket) => {
 
             const fullOrderItem = await models.OrderItem.findOne({
                 where: { order_item_id: orderItem.order_item_id },
-                include: [models.MenuItem]
+                include: [
+                    {
+                        model: models.MenuItem,
+                        attributes: ['name', 'description']
+                    },
+                    {
+                        model: models.Order,
+                        include: [
+                            {
+                                model: models.OrderStatus,
+                                attributes: ['status_name']
+                            }
+                        ]
+                    }
+                ]
             });
 
-            io.emit('cartUpdated', fullOrderItem);
+            // TODO: Transform this data somewhere else.
+            const response = {
+                ...fullOrderItem.get({ plain: true }),
+                status: fullOrderItem.Order.OrderStatus.status_name,
+                name: fullOrderItem.MenuItem.name
+            };
+
+            io.emit('cartUpdated', response);
+
         } catch (error) {
             console.error('Error adding item to cart:', error);
             socket.emit('error', 'Failed to add item to cart');

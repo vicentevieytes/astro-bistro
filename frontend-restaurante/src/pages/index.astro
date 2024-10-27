@@ -9,7 +9,7 @@ const urlParams = new URLSearchParams(Astro.url.search);
 let restaurantes = [];
 const responseRestaurante = await fetch(`http://localhost:5001/Restaurante`);
 restaurantes = await responseRestaurante.json();
-console.log(restaurantes);
+// console.log(restaurantes);
 ---
 
 <Layout title="VerLaCarta | Restaurantes">

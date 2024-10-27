@@ -101,7 +101,8 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
 
                 let restaurantTotal = 0;
                 restaurant.items.forEach(item => {
-                    cartHTML += `<li>${item.name} - Quantity: ${item.quantity} - Status: ${item.status}</li>`;
+                    // TODO: Standardize the structs after the introduction of SQL schemas.
+                    cartHTML += `<li>${item.name}  - Quantity: ${item.quantity} - Status: ${item.status}</li>`;
                     restaurantTotal += item.price * item.quantity;
                 });
 
