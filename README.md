@@ -22,6 +22,16 @@ npm run restauranteFE
 npm run backecnd
 ```
 
+Para enviar comandos a la base de datos instalar `psql` y ejecutar:
+```bash
+ psql postgresql://postgres:postgres@localhost:3333/astro-bistro
+```
+o
+```bash
+psql -h localhost -p 3333 -U postgres -d astro-bistro
+```
+e ingresar la contraseña `postgres`.
+
 # Use cases:
 
 -   El cliente va a un restaurante y puede escanear un código QR que lo lleva al menu y puede hacer un pedido desde ahí, cada mesa del restaurante está asociada a un código qr en particular así que el restaurante sabe desde que mesa se hizo el pedido.
