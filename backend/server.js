@@ -113,16 +113,6 @@ async function fetchMenuItemsFromDB() {
     return menuItems.map(item => item.get({ plain: true }));
 }
 
-
-// app.get('/Restaurante', async (req, res) => {
-//     try {
-//         const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
-//         res.send(convertToJSON(data.values));
-//     } catch (error) {
-//         res.status(500).json({ error: 'An error occurred while fetching data' });
-//     }
-// });
-
 app.get('/Restaurante', async (req, res) => {
     try {
         const restaurantsData = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
@@ -133,17 +123,6 @@ app.get('/Restaurante', async (req, res) => {
     }
 });
 
-
-// app.get('/local', async (req, res) => {
-//     const id = req.query.id;
-//     try {
-//         const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
-//         const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
-//         res.send(convertToJSON(localData));
-//     } catch (error) {
-//         res.status(500).json({ error: 'An error occurred while fetching data' });
-//     }
-// });
 
 app.get('/local', async (req, res) => {
     const id = req.query.id;
@@ -160,18 +139,6 @@ app.get('/local', async (req, res) => {
     }
 });
 
-
-// app.get('/menu', async (req, res) => {
-//     const id = req.query.id;
-//     try {
-//         const data = await fetchSheetDataWithCache(MENU_SHEET_NAME);
-//         const localData = data.values.filter((row) => row[1] === id || row[0] === 'id');
-//         res.send(convertToJSON(localData));
-//     } catch (error) {
-//         res.status(500).json({ error: 'An error occurred while fetching data' });
-//     }
-// });
-
 app.get('/menu', async (req, res) => {
     const restaurantId = req.query.id;
     try {
@@ -182,18 +149,6 @@ app.get('/menu', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching data' });
     }
 });
-
-
-// app.get('/comandas', async (req, res) => {
-//     const id = req.query.id;
-//     try {
-//         const data = await fetchSheetDataWithCache(COMANDA_SHEET_NAME);
-//         const localData = data.values.filter((row) => row[0] === id || row[0] === 'id');
-//         res.send(convertToJSON(localData));
-//     } catch (error) {
-//         res.status(500).json({ error: 'An error occurred while fetching data' });
-//     }
-// });
 
 app.get('/comandas', async (req, res) => {
     const restaurantId = req.query.id;
