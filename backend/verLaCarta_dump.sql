@@ -5,7 +5,7 @@
 -- Dumped from database version 16.1
 -- Dumped by pg_dump version 16.1
 
--- Started on 2024-10-27 04:13:47
+-- Started on 2024-10-28 00:31:15
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,21 +19,25 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 4 (class 2615 OID 2200)
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
+-- TOC entry 4912 (class 1262 OID 16405)
+-- Name: verLaCarta; Type: DATABASE; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+CREATE DATABASE "verLaCarta" WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'Portuguese_Brazil.1252';
 
 
---
--- TOC entry 4919 (class 0 OID 0)
--- Dependencies: 4
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
---
+\connect "verLaCarta"
 
-COMMENT ON SCHEMA public IS 'standard public schema';
-
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
 
 SET default_table_access_method = heap;
 
@@ -67,7 +71,7 @@ CREATE SEQUENCE public.menuitems_item_id_seq
 
 
 --
--- TOC entry 4920 (class 0 OID 0)
+-- TOC entry 4913 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: menuitems_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -129,7 +133,7 @@ CREATE SEQUENCE public.orderitems_order_item_id_seq
 
 
 --
--- TOC entry 4921 (class 0 OID 0)
+-- TOC entry 4914 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: orderitems_order_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -166,7 +170,7 @@ CREATE SEQUENCE public.orders_order_id_seq
 
 
 --
--- TOC entry 4922 (class 0 OID 0)
+-- TOC entry 4915 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: orders_order_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -189,7 +193,7 @@ CREATE SEQUENCE public.orderstatuses_status_id_seq
 
 
 --
--- TOC entry 4923 (class 0 OID 0)
+-- TOC entry 4916 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: orderstatuses_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -212,7 +216,7 @@ CREATE SEQUENCE public.orderstatushistory_history_id_seq
 
 
 --
--- TOC entry 4924 (class 0 OID 0)
+-- TOC entry 4917 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: orderstatushistory_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -250,7 +254,7 @@ CREATE SEQUENCE public.restaurants_restaurant_id_seq
 
 
 --
--- TOC entry 4925 (class 0 OID 0)
+-- TOC entry 4918 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: restaurants_restaurant_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -285,7 +289,7 @@ CREATE SEQUENCE public.users_user_id_seq
 
 
 --
--- TOC entry 4926 (class 0 OID 0)
+-- TOC entry 4919 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: users_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
@@ -294,7 +298,7 @@ ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
 
 
 --
--- TOC entry 4722 (class 2604 OID 16430)
+-- TOC entry 4715 (class 2604 OID 16430)
 -- Name: menu_items item_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -302,7 +306,7 @@ ALTER TABLE ONLY public.menu_items ALTER COLUMN item_id SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 4729 (class 2604 OID 16495)
+-- TOC entry 4722 (class 2604 OID 16495)
 -- Name: order_items order_item_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -310,7 +314,7 @@ ALTER TABLE ONLY public.order_items ALTER COLUMN order_item_id SET DEFAULT nextv
 
 
 --
--- TOC entry 4727 (class 2604 OID 16477)
+-- TOC entry 4720 (class 2604 OID 16477)
 -- Name: order_status_history history_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -318,7 +322,7 @@ ALTER TABLE ONLY public.order_status_history ALTER COLUMN history_id SET DEFAULT
 
 
 --
--- TOC entry 4724 (class 2604 OID 16445)
+-- TOC entry 4717 (class 2604 OID 16445)
 -- Name: order_statuses status_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -326,7 +330,7 @@ ALTER TABLE ONLY public.order_statuses ALTER COLUMN status_id SET DEFAULT nextva
 
 
 --
--- TOC entry 4725 (class 2604 OID 16454)
+-- TOC entry 4718 (class 2604 OID 16454)
 -- Name: orders order_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -334,7 +338,7 @@ ALTER TABLE ONLY public.orders ALTER COLUMN order_id SET DEFAULT nextval('public
 
 
 --
--- TOC entry 4720 (class 2604 OID 16420)
+-- TOC entry 4713 (class 2604 OID 16420)
 -- Name: restaurants restaurant_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -342,7 +346,7 @@ ALTER TABLE ONLY public.restaurants ALTER COLUMN restaurant_id SET DEFAULT nextv
 
 
 --
--- TOC entry 4718 (class 2604 OID 16410)
+-- TOC entry 4711 (class 2604 OID 16410)
 -- Name: users user_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -350,7 +354,7 @@ ALTER TABLE ONLY public.users ALTER COLUMN user_id SET DEFAULT nextval('public.u
 
 
 --
--- TOC entry 4905 (class 0 OID 16427)
+-- TOC entry 4898 (class 0 OID 16427)
 -- Dependencies: 220
 -- Data for Name: menu_items; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -401,17 +405,24 @@ COPY public.menu_items (item_id, restaurant_id, name, description, price, create
 
 
 --
--- TOC entry 4913 (class 0 OID 16492)
+-- TOC entry 4906 (class 0 OID 16492)
 -- Dependencies: 228
 -- Data for Name: order_items; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.order_items (order_item_id, order_id, item_id, quantity, price, created_at) FROM stdin;
+55	18	31	1	2.00	2024-10-27 04:28:31.895-03
+56	19	35	3	2.50	2024-10-27 04:29:47.327-03
+57	20	31	3	2.00	2024-10-27 04:31:02.913-03
+58	21	32	32	1.50	2024-10-27 04:44:21.868-03
+59	22	35	1	2.50	2024-10-27 04:51:40.174-03
+60	23	41	1	3.00	2024-10-27 04:51:55.112-03
+61	24	38	4	4.00	2024-10-27 04:55:27.659-03
 \.
 
 
 --
--- TOC entry 4911 (class 0 OID 16474)
+-- TOC entry 4904 (class 0 OID 16474)
 -- Dependencies: 226
 -- Data for Name: order_status_history; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -421,7 +432,7 @@ COPY public.order_status_history (history_id, order_id, status_id, changed_at) F
 
 
 --
--- TOC entry 4907 (class 0 OID 16442)
+-- TOC entry 4900 (class 0 OID 16442)
 -- Dependencies: 222
 -- Data for Name: order_statuses; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -437,17 +448,24 @@ COPY public.order_statuses (status_id, status_name) FROM stdin;
 
 
 --
--- TOC entry 4909 (class 0 OID 16451)
+-- TOC entry 4902 (class 0 OID 16451)
 -- Dependencies: 224
 -- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.orders (order_id, user_id, restaurant_id, status_id, created_at) FROM stdin;
+20	1	7	2	2024-10-27 04:31:02.872-03
+19	1	7	2	2024-10-27 04:29:47.315-03
+18	1	7	2	2024-10-27 04:28:31.888-03
+21	1	7	4	2024-10-27 04:44:21.828-03
+22	1	7	1	2024-10-27 04:51:40.13-03
+23	1	9	3	2024-10-27 04:51:55.072-03
+24	1	8	1	2024-10-27 04:55:27.612-03
 \.
 
 
 --
--- TOC entry 4903 (class 0 OID 16417)
+-- TOC entry 4896 (class 0 OID 16417)
 -- Dependencies: 218
 -- Data for Name: restaurants; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -466,7 +484,7 @@ COPY public.restaurants (restaurant_id, restaurant_name, description, latitude, 
 
 
 --
--- TOC entry 4901 (class 0 OID 16407)
+-- TOC entry 4894 (class 0 OID 16407)
 -- Dependencies: 216
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
@@ -477,7 +495,7 @@ COPY public.users (user_id, username, created_at) FROM stdin;
 
 
 --
--- TOC entry 4927 (class 0 OID 0)
+-- TOC entry 4920 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: menuitems_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -486,25 +504,25 @@ SELECT pg_catalog.setval('public.menuitems_item_id_seq', 41, true);
 
 
 --
--- TOC entry 4928 (class 0 OID 0)
+-- TOC entry 4921 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: orderitems_order_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.orderitems_order_item_id_seq', 50, true);
+SELECT pg_catalog.setval('public.orderitems_order_item_id_seq', 61, true);
 
 
 --
--- TOC entry 4929 (class 0 OID 0)
+-- TOC entry 4922 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: orders_order_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.orders_order_id_seq', 13, true);
+SELECT pg_catalog.setval('public.orders_order_id_seq', 24, true);
 
 
 --
--- TOC entry 4930 (class 0 OID 0)
+-- TOC entry 4923 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: orderstatuses_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -513,7 +531,7 @@ SELECT pg_catalog.setval('public.orderstatuses_status_id_seq', 6, true);
 
 
 --
--- TOC entry 4931 (class 0 OID 0)
+-- TOC entry 4924 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: orderstatushistory_history_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -522,7 +540,7 @@ SELECT pg_catalog.setval('public.orderstatushistory_history_id_seq', 1, false);
 
 
 --
--- TOC entry 4932 (class 0 OID 0)
+-- TOC entry 4925 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: restaurants_restaurant_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -531,7 +549,7 @@ SELECT pg_catalog.setval('public.restaurants_restaurant_id_seq', 1, false);
 
 
 --
--- TOC entry 4933 (class 0 OID 0)
+-- TOC entry 4926 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
@@ -540,7 +558,7 @@ SELECT pg_catalog.setval('public.users_user_id_seq', 1, true);
 
 
 --
--- TOC entry 4738 (class 2606 OID 16435)
+-- TOC entry 4731 (class 2606 OID 16435)
 -- Name: menu_items menuitems_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -549,7 +567,7 @@ ALTER TABLE ONLY public.menu_items
 
 
 --
--- TOC entry 4748 (class 2606 OID 16498)
+-- TOC entry 4741 (class 2606 OID 16498)
 -- Name: order_items orderitems_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -558,7 +576,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 4744 (class 2606 OID 16457)
+-- TOC entry 4737 (class 2606 OID 16457)
 -- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -567,7 +585,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 4740 (class 2606 OID 16447)
+-- TOC entry 4733 (class 2606 OID 16447)
 -- Name: order_statuses orderstatuses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -576,7 +594,7 @@ ALTER TABLE ONLY public.order_statuses
 
 
 --
--- TOC entry 4742 (class 2606 OID 16449)
+-- TOC entry 4735 (class 2606 OID 16449)
 -- Name: order_statuses orderstatuses_status_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -585,7 +603,7 @@ ALTER TABLE ONLY public.order_statuses
 
 
 --
--- TOC entry 4746 (class 2606 OID 16480)
+-- TOC entry 4739 (class 2606 OID 16480)
 -- Name: order_status_history orderstatushistory_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -594,7 +612,7 @@ ALTER TABLE ONLY public.order_status_history
 
 
 --
--- TOC entry 4736 (class 2606 OID 16425)
+-- TOC entry 4729 (class 2606 OID 16425)
 -- Name: restaurants restaurants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -603,7 +621,7 @@ ALTER TABLE ONLY public.restaurants
 
 
 --
--- TOC entry 4732 (class 2606 OID 16413)
+-- TOC entry 4725 (class 2606 OID 16413)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -612,7 +630,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4734 (class 2606 OID 16415)
+-- TOC entry 4727 (class 2606 OID 16415)
 -- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -621,7 +639,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4749 (class 2606 OID 16436)
+-- TOC entry 4742 (class 2606 OID 16436)
 -- Name: menu_items menuitems_restaurant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -630,7 +648,7 @@ ALTER TABLE ONLY public.menu_items
 
 
 --
--- TOC entry 4755 (class 2606 OID 16504)
+-- TOC entry 4748 (class 2606 OID 16504)
 -- Name: order_items orderitems_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -639,7 +657,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 4756 (class 2606 OID 16499)
+-- TOC entry 4749 (class 2606 OID 16499)
 -- Name: order_items orderitems_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -648,7 +666,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 4750 (class 2606 OID 16463)
+-- TOC entry 4743 (class 2606 OID 16463)
 -- Name: orders orders_restaurant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -657,7 +675,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 4751 (class 2606 OID 16468)
+-- TOC entry 4744 (class 2606 OID 16468)
 -- Name: orders orders_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -666,7 +684,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 4752 (class 2606 OID 16458)
+-- TOC entry 4745 (class 2606 OID 16458)
 -- Name: orders orders_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -675,7 +693,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 4753 (class 2606 OID 16481)
+-- TOC entry 4746 (class 2606 OID 16481)
 -- Name: order_status_history orderstatushistory_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -684,7 +702,7 @@ ALTER TABLE ONLY public.order_status_history
 
 
 --
--- TOC entry 4754 (class 2606 OID 16486)
+-- TOC entry 4747 (class 2606 OID 16486)
 -- Name: order_status_history orderstatushistory_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -692,7 +710,7 @@ ALTER TABLE ONLY public.order_status_history
     ADD CONSTRAINT orderstatushistory_status_id_fkey FOREIGN KEY (status_id) REFERENCES public.order_statuses(status_id);
 
 
--- Completed on 2024-10-27 04:13:47
+-- Completed on 2024-10-28 00:31:16
 
 --
 -- PostgreSQL database dump complete
