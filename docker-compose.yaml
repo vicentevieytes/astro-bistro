@@ -7,5 +7,5 @@ services:
     env_file:
       - ./backend/.env.postgres
     volumes:
-      - ./backend/astro-bistro-dump.sql:/docker-entrypoint-initdb.d/astro-bistro-dump.sql
+      - ./backend/verLaCarta_dump.sql:/docker-entrypoint-initdb.d/verLaCartaDump.sql
  
