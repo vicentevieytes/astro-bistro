@@ -4,15 +4,25 @@ A web application for managing your restaurant's menu and orders
 
 # Instalacion:
 
+
 Instalar dependencias:
 
 ```bash
+npm install
+cd frontend-consumidor
+npm install
+cd ../frontend-restaurante
 npm install
 ```
 
 Iniciar la base de datos:
 ```bash
 docker compose up
+```
+
+Copiar el archivo `backend/.env.sample` a `.env`, modificar las variables de entorno si es necesario.
+```bash
+cp backend/.env.sample backend/.env
 ```
 
 Iniciar los servidores en terminales distintas:
