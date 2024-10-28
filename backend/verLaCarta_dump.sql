@@ -23,7 +23,7 @@ SET row_security = off;
 -- Name: verLaCarta; Type: DATABASE; Schema: -; Owner: -
 --
 
-CREATE DATABASE "verLaCarta" WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'Portuguese_Brazil.1252';
+CREATE DATABASE "verLaCarta" WITH TEMPLATE = template0 ENCODING = 'UTF8'  LOCALE = 'Portuguese_Brazil.1252';
 
 
 \connect "verLaCarta"
