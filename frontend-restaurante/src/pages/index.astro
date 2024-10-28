@@ -29,18 +29,10 @@ console.log("EEEEEE")
 				restaurantes.map((restaurante: Restaurante) => (
 					<li class="link-card">
 						<Card
-							href={`/comandas?id=${restaurante.restaurant_id}`}
-							title={restaurante.restaurant_name}
+							href={`/adminResto?id=${restaurante.id}`}
+							title={restaurante.name}
 							body={restaurante.description || 'Descripción no disponible.'}
 						/>
-
-						{/* <a href={`/index?id=${restaurante.id}`}>
-							<h2>
-								{restaurante.name}
-								<span>&rarr;</span>
-							</h2>
-							<p>{restaurante.description || 'Descripción no disponible.'}</p>
-						</a> */}
 					</li>
 				))
 			}

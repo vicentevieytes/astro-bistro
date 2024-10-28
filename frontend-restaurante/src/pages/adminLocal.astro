@@ -1,0 +1,24 @@
+---
+// Importar el componente Card si es necesario
+import Card from '../components/Card.astro';
+import Layout from '../layouts/Layout.astro';
+import '../styles/global.css';
+
+const urlParams = new URLSearchParams(Astro.url.search);
+const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+
+let restauranteData = [];
+
+if (localId) {
+    const response = await fetch(`http://localhost:5001/local?id=${localId}`);
+    restauranteData = await response.json();
+}
+---
+
+<Layout title="Administrar menú">
+    <main>
+        <h1>Administrar el <span class="text-gradient">local</span></h1>
+    </main>
+</Layout>
+
+<style></style>
