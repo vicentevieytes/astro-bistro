@@ -41,11 +41,11 @@ import '../styles/global.css';
 
 				// Agregar marcadores de locales cercanos con descripciones detalladas
 				localesData.forEach((local: restaurante) => {
-					const coords = [parseFloat(local.lat.replace(',', '.')), parseFloat(local.len.replace(',', '.'))] as L.LatLngExpression,
+					const coords = [parseFloat(local.latitude), parseFloat(local.longitude)] as L.LatLngExpression,
 						marker = L.marker(coords).addTo(map);
 
 					// Bind popup con descripción
-					marker.bindPopup(`<a href="../local?id=${local.id}">${local.name}</a><p>${local.description}</p>`);
+					marker.bindPopup(`<a href="../local?id=${local.restaurant_id}">${local.restaurant_name}</a><p>${local.description}</p>`);
 
 					// Abrir el popup al hacer clic en el marcador
 					marker.on('click', () => {
@@ -53,7 +53,7 @@ import '../styles/global.css';
 					});
 
 					// Console log para verificar que se añaden los marcadores
-					console.log(`Marcador agregado: ${local.name} en ${coords}`);
+					console.log(`Marcador agregado: ${local.restaurant_name} en ${coords}`);
 				});
 			});
 		</script>

@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:14-alpine
+    hostname: db
+    ports:
+      - "3333:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./backend/verLaCarta_dump.sql:/docker-entrypoint-initdb.d/verLaCartaDump.sql
+ 

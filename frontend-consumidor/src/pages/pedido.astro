@@ -3,7 +3,11 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import '../styles/global.css';
 
+import Cart from '../components/Cart.astro';
+
+
 import type { itemMenu, restaurante } from '../utils/CustomTypes';
+
 
 const urlParams = new URLSearchParams(Astro.url.search);
 let localId = urlParams.get('id');
@@ -17,31 +21,24 @@ let restauranteData: restaurante = {} as restaurante;
 if (localId) {
     const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
         responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
-    restauranteData = (await responseRestaurante.json())[0];
+    restauranteData = (await responseRestaurante.json());
     menuData = await response.json();
 }
 
-console.log(restauranteData);
-console.log(menuData);
+console.log(menuData)
 ---
 
 <Layout title="Hacer Pedido">
     <main>
+        <Cart />
         <h1>
-            Hacer un pedido en <span class="text-gradient">{restauranteData.name}</span>
+            Hacer un pedido en <span class="text-gradient" id="restaurant-name"></span>
         </h1>
         <form id="order-form" class="form-card">
             <div class="form-group">
                 <label for="dish">Selecciona tu plato:</label>
                 <select id="dish" name="dish" required>
                     <option value="">--Selecciona--</option>
-                    {
-                        menuData.map((dish: itemMenu) => (
-                            <option value={dish.id}>
-                                {dish.name} - ${dish.price}
-                            </option>
-                        ))
-                    }
                 </select>
             </div>
             <div class="form-group">
@@ -60,48 +57,93 @@ console.log(menuData);
         <ul role="list" class="link-card-grid">
             <Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
         </ul>
+
     </main>
 </Layout>
 
 <script>
-    // Obtener elementos del DOM
-    const orderForm = document.getElementById('order-form') as HTMLFormElement;
-    const summaryList = document.getElementById('summary-list');
-    const totalPriceElement = document.getElementById('total-price');
+    import { io } from "socket.io-client";
 
-    let totalPrice = 0; // Total inicial del pedido
+    const socket = io('http://localhost:5001');
+    const orderForm = document.getElementById('order-form') as HTMLFormElement;
+    const dishSelect = document.getElementById('dish');
+    const restaurantNameSpan = document.getElementById('restaurant-name');
+
+    async function updatePageContent() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const localId = urlParams.get('id');
+
+        if (localId) {
+            try {
+                const response = await fetch(`http://localhost:5001/menu?id=${localId}`);
+                const menuData = await response.json();
+                const restaurantResponse = await fetch(`http://localhost:5001/local?id=${localId}`);
+                const restaurantData = await restaurantResponse.json();
+
+                // Update restaurant name
+                restaurantNameSpan.textContent = restaurantData.restaurant_name;
+
+                // Update menu items
+                dishSelect.innerHTML = '<option value="">--Selecciona--</option>';
+                menuData.forEach((dish) => {
+                    const option = document.createElement('option');
+                    option.value = dish.item_id;
+                    option.textContent = `${dish.name} - $${dish.price}`;
+                    dishSelect.appendChild(option);
+                });
+
+                // Update form data attributes
+                orderForm.dataset.localId = localId;
+                orderForm.dataset.restaurantName = restaurantData.restaurant_name;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+    }
+
+    // Call updatePageContent on initial load
+    updatePageContent();
+
+    // Listen for navigation events (e.g., back/forward buttons)
+    window.addEventListener('popstate', updatePageContent);
 
     orderForm?.addEventListener('submit', (event) => {
-        event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+        event.preventDefault();
 
-        const dishSelect = document.getElementById('dish') as HTMLSelectElement;
-        const quantityInput = document.getElementById('quantity') as HTMLInputElement;
-
+        const quantityInput = document.getElementById('quantity');
         const dishId = dishSelect.value;
         const quantity = parseInt(quantityInput.value);
 
         const selectedDish = dishSelect.options[dishSelect.selectedIndex];
 
         if (selectedDish) {
-            const dishName = selectedDish.textContent?.split(' - ')[0] || ''; // Obtener el nombre del plato
+            const dishName = selectedDish.textContent?.split(' - ')[0] || '';
             const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
-            const itemTotal = dishPrice * quantity;
-            totalPrice += itemTotal;
 
-            // Agregar el item al resumen
-            const listItem = document.createElement('li');
-            listItem.textContent = `${dishName} - Cantidad: ${quantity} - Total: $${itemTotal.toFixed(2)}`;
-            summaryList?.appendChild(listItem);
+            const localId = orderForm.dataset.localId;
+            const restaurantName = orderForm.dataset.restaurantName;
 
-            // Actualizar el precio total
-            if (totalPriceElement) {
-                totalPriceElement.textContent = totalPrice.toFixed(2);
-            }
+            // TODO: This is hardcoded for now:
+            const userId = 1;
+
+            const newItem = {
+                id: dishId,
+                userId: userId,
+                name: dishName,
+                price: dishPrice,
+                quantity: quantity,
+                restaurantId: localId,
+            };
+
+            console.log(localId);
+
+            socket.emit('addToCart', newItem);
         }
 
-        orderForm.reset(); // Resetear el formulario
+        orderForm.reset();
     });
 </script>
+
 
 <style>
     .form-card {

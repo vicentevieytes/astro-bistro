@@ -8,12 +8,15 @@ export interface Comanda {
     state: Estado;
 }
 
+// TODO: Standardize all of these interfaces between frontend-consumidor and frontend-restaurante
+
 export interface Restaurante {
-    id: number; // Identificador único del restaurante
-    name: string; // Nombre del restaurante
-    lat: number;
-    len: number;
-    description: string; // Descripción del restaurante
+    restaurant_id: number;
+    restaurant_name: string;
+    description: string;
+    latitude: string;
+    longitude: string;
+    created_at: string;
 }
 
 export interface Producto {
