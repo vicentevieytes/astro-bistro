@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import multer from 'multer';
 import dotenv from 'dotenv';
 import { convertToJSON } from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
@@ -15,18 +16,13 @@ dotenv.config();
 
 // Initialize express app
 const app = express();
+const upload = multer();
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        dialect: 'postgres',
-        port: process.env.DB_PORT,
-    }
-);
-
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    port: process.env.DB_PORT,
+});
 
 // Test the connection
 try {
@@ -57,10 +53,9 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
         origin: ['http://localhost:4321', 'http://localhost:4322'],
-        methods: ['GET', 'POST']
-    }
+        methods: ['GET', 'POST'],
+    },
 });
-
 
 async function pollForDatabaseChanges() {
     try {
@@ -72,7 +67,6 @@ async function pollForDatabaseChanges() {
     }
 }
 
-
 // Set up polling to run every minute.
 setInterval(pollForDatabaseChanges, 600000);
 
@@ -80,7 +74,7 @@ const CACHE_KEYS = {
     RESTAURANTS: 'restaurants',
     MENU_ITEMS: 'menu_items',
     ORDERS: 'orders',
-    ORDER_STATUSES: 'order_statuses'
+    ORDER_STATUSES: 'order_statuses',
 };
 
 async function fetchDataWithCache(cacheKey, fetchFunction) {
@@ -103,14 +97,14 @@ async function fetchDataWithCache(cacheKey, fetchFunction) {
 
 async function fetchRestaurantsFromDB() {
     const restaurants = await models.Restaurant.findAll({
-        attributes: ['restaurant_id', 'restaurant_name', 'description', 'latitude', 'longitude', 'created_at']
+        attributes: ['restaurant_id', 'restaurant_name', 'description', 'latitude', 'longitude', 'created_at'],
     });
-    return restaurants.map(restaurant => restaurant.get({ plain: true }));
+    return restaurants.map((restaurant) => restaurant.get({ plain: true }));
 }
 
 async function fetchMenuItemsFromDB() {
     const menuItems = await models.MenuItem.findAll();
-    return menuItems.map(item => item.get({ plain: true }));
+    return menuItems.map((item) => item.get({ plain: true }));
 }
 
 app.get('/Restaurante', async (req, res) => {
@@ -123,12 +117,11 @@ app.get('/Restaurante', async (req, res) => {
     }
 });
 
-
 app.get('/local', async (req, res) => {
     const id = req.query.id;
     try {
         const restaurants = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
-        const restaurant = restaurants.find(r => r.restaurant_id === parseInt(id));
+        const restaurant = restaurants.find((r) => r.restaurant_id === parseInt(id));
         if (restaurant) {
             res.json(restaurant);
         } else {
@@ -143,7 +136,7 @@ app.get('/menu', async (req, res) => {
     const restaurantId = req.query.id;
     try {
         const menuItems = await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
-        const filteredItems = menuItems.filter(item => item.restaurant_id === parseInt(restaurantId));
+        const filteredItems = menuItems.filter((item) => item.restaurant_id === parseInt(restaurantId));
         res.json(filteredItems);
     } catch (error) {
         res.status(500).json({ error: 'An error occurred while fetching data' });
@@ -161,33 +154,33 @@ app.get('/comandas', async (req, res) => {
                     include: [
                         {
                             model: models.MenuItem,
-                            attributes: ['name']
-                        }
-                    ]
+                            attributes: ['name'],
+                        },
+                    ],
                 },
                 {
                     model: models.OrderStatus,
-                    attributes: ['status_name']
+                    attributes: ['status_name'],
                 },
                 {
                     model: models.User,
-                    attributes: ['username']
-                }
+                    attributes: ['username'],
+                },
             ],
-            order: [['created_at', 'DESC']]
+            order: [['created_at', 'DESC']],
         });
 
-        const comandas = orders.map(order => ({
+        const comandas = orders.map((order) => ({
             id: order.order_id,
             user: order.User.username,
             status: order.OrderStatus.status_name,
-            items: order.OrderItems.map(item => ({
+            items: order.OrderItems.map((item) => ({
                 productId: item.item_id,
                 name: item.MenuItem.name,
                 quantity: item.quantity,
-                comments: item.comments || 'Sin comentarios'
+                comments: item.comments || 'Sin comentarios',
             })),
-            created_at: order.created_at
+            created_at: order.created_at,
         }));
 
         res.json(comandas);
@@ -200,7 +193,7 @@ app.get('/comandas', async (req, res) => {
 app.get('/orderStatuses', async (req, res) => {
     try {
         const statuses = await models.OrderStatus.findAll({
-            attributes: ['status_id', 'status_name']
+            attributes: ['status_id', 'status_name'],
         });
         res.json(statuses);
     } catch (error) {
@@ -209,66 +202,21 @@ app.get('/orderStatuses', async (req, res) => {
     }
 });
 
-app.post('/crear-restaurante', async (req, res) => {
-    // Let's throw an error because this is not implemented yet.
-    res.status(500).json({ error: 'Not implemented yet' });
-    // const { nombre, latitud, longitud, descripcion, platos } = req.body;
-    //
-    // // Obtén los datos actuales de la hoja de cálculo
-    // const data = await fetchSheetDataWithCache(RESTAURANTE_SHEET_NAME);
-    //
-    // // Encuentra el máximo ID existente
-    // const existingIds = data.values.map(row => row[0]); // Asumiendo que el ID está en la primera columna
-    // const maxId = Math.max(...existingIds.filter(id => !isNaN(id)).map(Number)); // Filtrar y convertir a números
-    // const newId = maxId + 1; // Generar nuevo ID
-    //
-    // // Formato del objeto final
-    // const restaurantData = {
-    //     id: newId,
-    //     nombre,
-    //     lat: latitud,
-    //     len: longitud,
-    //     descripcion,
-    //     platos
-    // };
-    //
-    // // Obtén los datos actuales de la hoja de cálculo para los platos
-    // const menuData = await fetchSheetDataWithCache(MENU_SHEET_NAME);
-    //
-    // // Encuentra el máximo ID existente para los platos
-    // const existingPlateIds = menuData.values.map(row => row[0]); // Asumiendo que el ID de plato está en la primera columna
-    // const maxPlateId = Math.max(...existingPlateIds.filter(id => !isNaN(id)).map(Number)); // Filtrar y convertir a números
-    //
-    // try {
-    //     // Formatear los datos para agregar a la hoja de cálculo
-    //     const formattedRestaurantData = [
-    //         restaurantData.id,
-    //         restaurantData.nombre,
-    //         restaurantData.lat,
-    //         restaurantData.len,
-    //         restaurantData.descripcion,
-    //     ];
-    //
-    //     // Llamar a la función que actualiza los datos en la hoja de cálculo
-    //     await appendSheetData(RESTAURANTE_SHEET_NAME, [formattedRestaurantData]);
-    //
-    //     const formattedPlatosData = platos.map((plato, index) => [
-    //         maxPlateId + index + 1,
-    //         restaurantData.id,
-    //         plato.nombre,
-    //         plato.precio,
-    //         plato.descripcion
-    //     ]);
-    //
-    //     // Llamar a la función que actualiza los datos en la hoja de cálculo del Menu
-    //     await appendSheetData(MENU_SHEET_NAME, formattedPlatosData);
-    //
-    //     // Enviar una respuesta exitosa
-    //     res.status(200).json({ message: 'Restaurante con su menu creado exitosamente' });
-    // } catch (error) {
-    //     console.error('Error al crear el restaurante:', error);
-    //     res.status(500).json({ error: 'Ocurrió un error al crear el restaurante' });
-    // }
+app.post('/crear-restaurante', upload.any(), async (req, res) => {
+    const { nombre, descripcion, latitud, longitud } = req.body,
+        logo = req.files[0],
+        images = req.files.slice(1);
+    res.status(200).json({
+        message: 'Datos recibidos',
+        data: {
+            nombre: nombre,
+            descripcion: descripcion,
+            latitud: latitud,
+            longitud: longitud,
+            logo: logo,
+            images: images,
+        },
+    });
 });
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
@@ -291,7 +239,6 @@ app.post('/invalidate-cache', (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-
 io.on('connection', (socket) => {
     console.log('A user connected');
 
@@ -309,17 +256,17 @@ io.on('connection', (socket) => {
             let order = await models.Order.create({
                 user_id: item.userId,
                 restaurant_id: item.restaurantId,
-                status_id: pendingStatus.status_id  // Use the actual status_id from the database
+                status_id: pendingStatus.status_id, // Use the actual status_id from the database
             });
 
             console.log(item);
-            console.log("EPA")
+            console.log('EPA');
 
             const orderItem = await models.OrderItem.create({
                 order_id: order.order_id,
                 item_id: item.id,
                 quantity: item.quantity,
-                price: item.price
+                price: item.price,
             });
 
             const fullOrderItem = await models.OrderItem.findOne({
@@ -327,34 +274,34 @@ io.on('connection', (socket) => {
                 include: [
                     {
                         model: models.MenuItem,
-                        attributes: ['name', 'description']
+                        attributes: ['name', 'description'],
                     },
                     {
                         model: models.Order,
                         include: [
                             {
                                 model: models.OrderStatus,
-                                attributes: ['status_name']
+                                attributes: ['status_name'],
                             },
                             {
                                 model: models.Restaurant,
-                                attributes: ['restaurant_id', 'restaurant_name']
-                            }
-                        ]
-                    }
-                ]
+                                attributes: ['restaurant_id', 'restaurant_name'],
+                            },
+                        ],
+                    },
+                ],
             });
 
             // TODO: Transform this data somewhere else.
             const response = {
                 id: fullOrderItem.order_id, // TODO: We are sending the order id instead of the order_item_id.
-                                            //  We should send both.
+                //  We should send both.
                 name: fullOrderItem.MenuItem.name,
                 price: fullOrderItem.price,
                 quantity: fullOrderItem.quantity,
                 status: fullOrderItem.Order.OrderStatus.status_name,
                 restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
-                restaurantName: fullOrderItem.Order.Restaurant.restaurant_name
+                restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
             };
 
             io.emit('cartUpdated', response);
@@ -364,16 +311,16 @@ io.on('connection', (socket) => {
                 id: order.order_id,
                 user: order.user_id.username || 'Jorge', // Jorge is there for debugging purposes
                 status: pendingStatus.status_name,
-                items: [{
-                    productId: orderItem.item_id,
-                    name: fullOrderItem.MenuItem.name,
-                    quantity: orderItem.quantity,
-                    comments: 'Sin comentarios' // TODO: Allow users to add comments
-                }],
-                created_at: order.created_at
+                items: [
+                    {
+                        productId: orderItem.item_id,
+                        name: fullOrderItem.MenuItem.name,
+                        quantity: orderItem.quantity,
+                        comments: 'Sin comentarios', // TODO: Allow users to add comments
+                    },
+                ],
+                created_at: order.created_at,
             });
-
-
         } catch (error) {
             console.error('Error adding item to cart:', error);
             socket.emit('error', 'Failed to add item to cart');
@@ -384,35 +331,41 @@ io.on('connection', (socket) => {
         try {
             const orders = await models.Order.findAll({
                 where: {
-                    user_id: userId
+                    user_id: userId,
                 },
-                include: [{
-                    model: models.OrderItem,
-                    include: [{
-                        model: models.MenuItem,
-                        attributes: ['name', 'description']
-                    }]
-                }, {
-                    model: models.Restaurant,
-                    attributes: ['restaurant_id', 'restaurant_name']
-                }, {
-                    model: models.OrderStatus,
-                    attributes: ['status_name']
-                }]
+                include: [
+                    {
+                        model: models.OrderItem,
+                        include: [
+                            {
+                                model: models.MenuItem,
+                                attributes: ['name', 'description'],
+                            },
+                        ],
+                    },
+                    {
+                        model: models.Restaurant,
+                        attributes: ['restaurant_id', 'restaurant_name'],
+                    },
+                    {
+                        model: models.OrderStatus,
+                        attributes: ['status_name'],
+                    },
+                ],
             });
 
             let cartItems = [];
 
             // TODO: Transform this data somewhere else.
-            orders.forEach(order => {
-                const orderItems = order.OrderItems.map(item => ({
+            orders.forEach((order) => {
+                const orderItems = order.OrderItems.map((item) => ({
                     id: item.order_id, // TODO: Maybe send the order_item_id too...
                     name: item.MenuItem.name,
                     price: item.price,
                     quantity: item.quantity,
                     status: order.OrderStatus.status_name,
                     restaurantId: order.Restaurant.restaurant_id,
-                    restaurantName: order.Restaurant.restaurant_name
+                    restaurantName: order.Restaurant.restaurant_name,
                 }));
                 cartItems = cartItems.concat(orderItems);
             });
@@ -427,7 +380,7 @@ io.on('connection', (socket) => {
     socket.on('updateOrderStatus', async ({ orderId, newStatusId }) => {
         try {
             const order = await models.Order.findByPk(orderId, {
-                include: [{ model: models.OrderStatus }]
+                include: [{ model: models.OrderStatus }],
             });
             if (!order) {
                 throw new Error('Order not found');
@@ -441,14 +394,13 @@ io.on('connection', (socket) => {
             order.status_id = newStatusId;
             await order.save();
 
-            console.log("Order status updated successfully");
+            console.log('Order status updated successfully');
 
-            console.log(orderId)
-
+            console.log(orderId);
 
             io.emit('orderStatusUpdated', {
                 orderId,
-                newStatus: newStatus.status_name
+                newStatus: newStatus.status_name,
             });
         } catch (error) {
             console.error('Error updating order status:', error);
@@ -460,7 +412,6 @@ io.on('connection', (socket) => {
         console.log('User disconnected.');
     });
 });
-
 
 // Replace app.listen with httpServer.listen
 httpServer.listen(PORT, () => {

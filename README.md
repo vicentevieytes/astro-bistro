@@ -4,7 +4,6 @@ A web application for managing your restaurant's menu and orders
 
 # Instalacion:
 
-
 Instalar dependencias:
 
 ```bash
@@ -16,33 +15,41 @@ npm install
 ```
 
 Iniciar la base de datos:
+
 ```bash
 docker compose up
 ```
 
 Copiar el archivo `backend/.env.sample` a `.env`, modificar las variables de entorno si es necesario.
+
 ```bash
 cp backend/.env.sample backend/.env
 ```
 
 Iniciar los servidores en terminales distintas:
+
 ```bash
 npm run consumidorFE
 npm run restauranteFE
-npm run backecnd
+npm run backend
 ```
 
 Para enviar comandos a la base de datos instalar `psql` y ejecutar:
+
 ```bash
  psql postgresql://postgres:postgres@localhost:3333/astro-bistro
 ```
+
 o
+
 ```bash
 psql -h localhost -p 3333 -U postgres -d astro-bistro
 ```
+
 e ingresar la contraseña `postgres`.
 
 Para detener la base de datos:
+
 ```bash
 docker compose down
 ```
@@ -59,5 +66,3 @@ docker compose down
 -   El menu puede ser contenido estático como un pdf o html plano, no hace falta que sea interactivo o modificable ni que los pedidos sean personalizables.
 
 *   No hace falta implementar persistencia, pero esto implica que cada vez que lo levantemos hay que registrar un restaurante, las mesas, generar los qrs, el menu, etc. El profe mencionó que si queremos podemos implementarlo o serializar las estructuras de memoria y guardar un "snapshot" del estado.
-
-
