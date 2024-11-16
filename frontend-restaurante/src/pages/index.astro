@@ -10,7 +10,7 @@ let restaurantes = [];
 const responseRestaurante = await fetch(`http://localhost:5001/Restaurante`);
 restaurantes = await responseRestaurante.json();
 console.log(restaurantes);
-console.log("EEEEEE")
+console.log('EEEEEE');
 ---
 
 <Layout title="VerLaCarta | Restaurantes">
@@ -18,19 +18,27 @@ console.log("EEEEEE")
 		<h1>
 			Bienvenido a <span class="text-gradient">VerLaCarta</span>
 		</h1>
-		<ul role="list" class="link-card-grid">
-			<Card href="./createResto" title="Crear restaurante" body="Crea y personaliza tu propio restaurante." />
+		<ul
+			role="list"
+			class="link-card-grid">
+			<Card
+				href="./createResto"
+				title="Crear restaurante"
+				body="Crea y personaliza tu propio restaurante."
+			/>
 		</ul>
 		<h2>
 			<span class="text-gradient">Restaurantes</span> disponibles:
 		</h2>
-		<ul role="list" class="link-card">
+		<ul
+			role="list"
+			class="link-card">
 			{
 				restaurantes.map((restaurante: Restaurante) => (
 					<li class="link-card">
 						<Card
-							href={`/adminResto?id=${restaurante.id}`}
-							title={restaurante.name}
+							href={`/adminResto?id=${restaurante.restaurant_id}`}
+							title={restaurante.restaurant_name}
 							body={restaurante.description || 'Descripción no disponible.'}
 						/>
 					</li>
