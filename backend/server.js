@@ -450,8 +450,45 @@ io.on('connection', (socket) => {
     });
 });
 
+async function initializeDatabase() {
+    try {
+        const existingStatuses = await models.OrderStatus.count();
+
+        if (existingStatuses === 0) { // Insert only if no statuses exist
+            const statusesToInsert = [
+                { status_id: 1, status_name: 'Aguardando aceptación' },
+                { status_id: 2, status_name: 'Aceptado' },
+                { status_id: 3, status_name: 'Rechazado' },
+                { status_id: 4, status_name: 'En preparación' },
+                { status_id: 5, status_name: 'Listo para ser retirado' },
+                { status_id: 6, status_name: 'Pronto a ser servido' },
+            ];
+            await models.OrderStatus.bulkCreate(statusesToInsert);
+            console.log('Order statuses inserted successfully.');
+        } else {
+            console.log('Order statuses already exist. Skipping insertion.');
+        }
+
+        // Check if user with ID 1 exists. If not, create "Pepe" user.
+        const firstUser = await models.User.findByPk(1);
+
+        if (!firstUser) {
+            await models.User.create({ user_id: 1, username: 'Pepe' }); // Make sure user_id is inserted.
+            console.log('User "Pepe" created.');
+        } else {
+            console.log('User with ID 1 already exists.');
+        }
+
+    } catch (error) {
+        console.error('Error initializing database:', error);
+    }
+}
+
+
 // Replace app.listen with httpServer.listen
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     pollForDatabaseChanges();
+    initializeDatabase();
 });
+
