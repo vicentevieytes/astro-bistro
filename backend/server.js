@@ -11,6 +11,7 @@ import { Server } from 'socket.io';
 
 import { Sequelize, DataTypes } from 'sequelize';
 import initModels from './orm_models/index.js';
+import Restaurant from './orm_models/Restaurant.js';
 
 dotenv.config();
 
@@ -206,16 +207,22 @@ app.post('/crear-restaurante', upload.any(), async (req, res) => {
     const { nombre, descripcion, latitud, longitud } = req.body,
         logo = req.files[0],
         images = req.files.slice(1);
+
+    const restaurant = await models.Restaurant.create({
+        restaurant_name: nombre,
+        description: descripcion,
+        latitude: latitud,
+        longitude: longitud,
+        logo: logo.buffer,
+        image0: images[0] ? images[0].buffer : {},
+        image1: images[1] ? images[1].buffer : {},
+        image2: images[2] ? images[2].buffer : {},
+        image3: images[3] ? images[3].buffer : {},
+        image4: images[4] ? images[4].buffer : {},
+    });
     res.status(200).json({
         message: 'Datos recibidos',
-        data: {
-            nombre: nombre,
-            descripcion: descripcion,
-            latitud: latitud,
-            longitud: longitud,
-            logo: logo,
-            images: images,
-        },
+        data: restaurant,
     });
 });
 

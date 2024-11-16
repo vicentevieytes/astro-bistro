@@ -230,11 +230,17 @@ ALTER SEQUENCE public.orderstatushistory_history_id_seq OWNED BY public.order_st
 --
 
 CREATE TABLE public.restaurants (
-    restaurant_id integer NOT NULL,
+    restaurant_id integer NOT NULL nextval(10) PRIMARY KEY,
     restaurant_name character varying(100) NOT NULL,
     description text,
     latitude numeric(10,8),
     longitude numeric(11,8),
+    logo bytea,
+    image0 bytea,
+    image1 bytea,
+    image2 bytea,
+    image3 bytea,
+    image4 bytea,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
