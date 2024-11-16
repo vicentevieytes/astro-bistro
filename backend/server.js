@@ -60,9 +60,11 @@ const io = new Server(httpServer, {
 
 async function pollForDatabaseChanges() {
     try {
+        cache.del(CACHE_KEYS.RESTAURANTS);
+        cache.del(CACHE_KEYS.MENU_ITEMS);
+
         await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
         await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
-        // Add similar calls for other entities (orders, order statuses)
     } catch (error) {
         console.error(`Error polling database:`, error);
     }
@@ -113,6 +115,9 @@ async function fetchRestaurantsFromDB() {
             'created_at',
         ],
     });
+
+    // console.log(restaurants);
+
     return restaurants.map((restaurant) => restaurant.get({ plain: true }));
 }
 
