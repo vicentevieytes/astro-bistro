@@ -2,13 +2,12 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { convertToJSON } from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
-import { Sequelize, DataTypes } from 'sequelize';
+import Sequelize from 'sequelize';
 import initModels from './orm_models/index.js';
 
 dotenv.config();
@@ -348,7 +347,7 @@ io.on('connection', (socket) => {
             // TODO: Transform this data somewhere else.
             const response = {
                 id: fullOrderItem.order_id, // TODO: We are sending the order id instead of the order_item_id.
-                                            //  We should send both.
+                //  We should send both.
                 name: fullOrderItem.MenuItem.name,
                 price: fullOrderItem.price,
                 quantity: fullOrderItem.quantity,
