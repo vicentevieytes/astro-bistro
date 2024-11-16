@@ -69,7 +69,7 @@ async function pollForDatabaseChanges() {
 }
 
 // Set up polling to run every minute.
-setInterval(pollForDatabaseChanges, 600000);
+setInterval(pollForDatabaseChanges, 10000);
 
 const CACHE_KEYS = {
     RESTAURANTS: 'restaurants',
@@ -98,7 +98,20 @@ async function fetchDataWithCache(cacheKey, fetchFunction) {
 
 async function fetchRestaurantsFromDB() {
     const restaurants = await models.Restaurant.findAll({
-        attributes: ['restaurant_id', 'restaurant_name', 'description', 'latitude', 'longitude', 'created_at'],
+        attributes: [
+            'restaurant_id',
+            'restaurant_name',
+            'description',
+            'latitude',
+            'longitude',
+            'logo',
+            'image0',
+            'image1',
+            'image2',
+            'image3',
+            'image4',
+            'created_at',
+        ],
     });
     return restaurants.map((restaurant) => restaurant.get({ plain: true }));
 }
@@ -220,11 +233,23 @@ app.post('/crear-restaurante', upload.any(), async (req, res) => {
         image3: images[3] ? images[3].buffer : {},
         image4: images[4] ? images[4].buffer : {},
     });
+    await crearPlatos(req.body.platos, restaurant.restaurant_id);
     res.status(200).json({
         message: 'Datos recibidos',
         data: restaurant,
     });
 });
+
+async function crearPlatos(platos, idRestaurante) {
+    platos.forEach(async (plato) => {
+        await models.MenuItem.create({
+            restaurant_id: idRestaurante,
+            name: plato.nombre,
+            description: plato.nombre,
+            price: plato.precio,
+        });
+    });
+}
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {
