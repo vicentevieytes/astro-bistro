@@ -1,10 +1,10 @@
-import User from './User.js';
+import User from '../../../orm_models/User.js';
 import Restaurant from './Restaurant.js';
 import MenuItem from './MenuItem.js';
-import OrderStatus from './OrderStatus.js';
-import Order from './Order.js';
-import OrderStatusHistory from './OrderStatusHistory.js';
-import OrderItem from './OrderItem.js';
+import OrderStatus from '../../../orm_models/OrderStatus.js';
+import Order from '../../../orm_models/Order.js';
+import OrderStatusHistory from '../../../orm_models/OrderStatusHistory.js';
+import OrderItem from '../../../orm_models/OrderItem.js';
 
 export default function initModels(sequelize) {
     const models = {
@@ -14,7 +14,8 @@ export default function initModels(sequelize) {
         OrderStatus: OrderStatus(sequelize),
         Order: Order(sequelize),
         OrderStatusHistory: OrderStatusHistory(sequelize),
-        OrderItem: OrderItem(sequelize)
+        OrderItem: OrderItem(sequelize),
+        sequelize: sequelize, // xdd?
     };
 
     // I have to check if this is correct, XD:

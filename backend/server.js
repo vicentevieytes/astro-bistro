@@ -10,10 +10,11 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 import { Sequelize, DataTypes } from 'sequelize';
-import initModels from './orm_models/index.js';
-import Restaurant from './orm_models/Restaurant.js';
+import initModels from './infrastructure/database/models/index.js';
+import Restaurant from './infrastructure/database/models/Restaurant.js';
 import * as path from "node:path";
 import * as fs from "node:fs";
+import {setupRestaurantModule} from "./config/di.js";
 
 dotenv.config();
 
@@ -213,6 +214,7 @@ async function createInitialRestaurantData() {
     };
 }
 
+// TODO: I am changing from "Restaurante" to "restaurants"
 app.get('/Restaurante', async (req, res) => {
     try {
         const restaurantsData = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
@@ -223,6 +225,7 @@ app.get('/Restaurante', async (req, res) => {
     }
 });
 
+// TODO: I am changing from "Local" to "restaurant"
 app.get('/local', async (req, res) => {
     const id = req.query.id;
     try {
@@ -308,6 +311,16 @@ app.get('/orderStatuses', async (req, res) => {
     }
 });
 
+// NEW LOGIC COMES HERE
+
+// TODO: Try to decouple the cache logic.
+const { router: restaurantRouter } = setupRestaurantModule(models);
+
+app.use(restaurantRouter);
+
+// NEW LOGIC COMES HERE
+
+// TODO: i am changing from "crear-restaurante" to "restaurante" because it is already a post request
 app.post('/crear-restaurante', upload.any(), async (req, res) => {
     const { nombre, descripcion, latitud, longitud } = req.body,
         logo = req.files[0],
@@ -584,4 +597,3 @@ httpServer.listen(PORT, () => {
     pollForDatabaseChanges();
     initializeDatabase();
 });
-
