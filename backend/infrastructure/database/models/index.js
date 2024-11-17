@@ -3,7 +3,7 @@ import Restaurant from './Restaurant.js';
 import MenuItem from './MenuItem.js';
 import OrderStatus from './OrderStatus.js';
 import Order from './Order.js';
-import OrderStatusHistory from './OrderStatusHistory.js';
+import OrderStatusHistory from '../../../unused_orm_models/OrderStatusHistory.js';
 import OrderItem from './OrderItem.js';
 
 export default function initModels(sequelize) {
@@ -14,7 +14,8 @@ export default function initModels(sequelize) {
         OrderStatus: OrderStatus(sequelize),
         Order: Order(sequelize),
         OrderStatusHistory: OrderStatusHistory(sequelize),
-        OrderItem: OrderItem(sequelize)
+        OrderItem: OrderItem(sequelize),
+        sequelize: sequelize, // xdd?
     };
 
     // I have to check if this is correct, XD:

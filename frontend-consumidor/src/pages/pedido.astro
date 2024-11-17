@@ -17,8 +17,8 @@ let restauranteData: restaurante = {} as restaurante;
 // TODO: Handle the case where the localId is invalid. Maybe show an error page.
 
 if (localId) {
-    const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
-        responseRestaurante = await fetch(`http://localhost:5001/local?id=${localId}`);
+    const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
+        responseRestaurante = await fetch(`http://localhost:5001/restaurantes?id=${localId}`); // Did I break anything by changing this endpoint?
     restauranteData = (await responseRestaurante.json());
     menuData = await response.json();
 }
@@ -81,9 +81,9 @@ console.log(menuData)
 
         if (localId) {
             try {
-                const response = await fetch(`http://localhost:5001/menu?id=${localId}`);
+                const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`);
                 const menuData = await response.json();
-                const restaurantResponse = await fetch(`http://localhost:5001/local?id=${localId}`);
+                const restaurantResponse = await fetch(`http://localhost:5001/restaurantes?id=${localId}`);
                 const restaurantData = await restaurantResponse.json();
 
                 // Update restaurant name

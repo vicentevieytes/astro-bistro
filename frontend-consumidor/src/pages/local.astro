@@ -4,11 +4,17 @@ import Card from '../components/Card.astro';
 import '../styles/global.css';
 
 import Cart from '../components/Cart.astro';
+import { OrderStatus } from '../types/types';
+
 
 const url = new URL(Astro.request.url),
 	localId = url.searchParams.get('id'),
-	response = await fetch(`http://localhost:5001/local?id=${localId}`),
-	localData = await response.json();
+	response = await fetch(`http://localhost:5001/restaurantes?id=${localId}`), // Did I break anything by changing this endpoint?
+	localData: Restaurante = await response.json();
+	// localData = data[0];
+
+// console.log(data);
+// console.log("AAA")
 ---
 
 <Layout title="Restaurant">

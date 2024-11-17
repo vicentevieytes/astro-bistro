@@ -10,10 +10,12 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 import { Sequelize, DataTypes } from 'sequelize';
-import initModels from './orm_models/index.js';
-import Restaurant from './orm_models/Restaurant.js';
-import * as path from 'node:path';
-import * as fs from 'node:fs';
+import initModels from './infrastructure/database/models/index.js';
+import * as path from "node:path";
+import * as fs from "node:fs";
+import {setupRestaurantModule} from "./config/setupRestaurantModule.js";
+import {setupMenuItemModule} from "./config/setupMenuItemModule.js";
+import {setupOrderModule} from "./config/setupOrderModule.js";
 
 dotenv.config();
 
@@ -141,8 +143,7 @@ async function initializeDatabase() {
 async function initializeOrderStatuses() {
     const existingStatuses = await models.OrderStatus.count();
 
-    if (existingStatuses === 0) {
-        // Insert only if no statuses exist
+    if (existingStatuses === 0) { // Insert only if no statuses exist
         const statusesToInsert = [
             { status_id: 1, status_name: 'Aguardando aceptación' },
             { status_id: 2, status_name: 'Aceptado' },
@@ -177,11 +178,11 @@ async function initializeInitialRestaurant() {
         await models.Restaurant.create(restaurantData);
 
         const menuItemsToInsert = [
-            { restaurant_id: 1, name: 'Café con leche', description: 'Café tradicional argentino con leche', price: 8.0 },
-            { restaurant_id: 1, name: 'Medialunas', description: 'Medialunas dulces argentinas', price: 3.5 },
-            { restaurant_id: 1, name: 'Tostado', description: 'Sándwich de jamón y queso tostado', price: 10.0 },
-            { restaurant_id: 1, name: 'Jugo de naranja', description: 'Jugo de naranja exprimido', price: 6.0 },
-            { restaurant_id: 1, name: 'Factura', description: 'Factura dulce', price: 4.0 },
+            { restaurant_id: 1, name: 'Café con leche', description: 'Café tradicional argentino con leche', price: 8.00 },
+            { restaurant_id: 1, name: 'Medialunas', description: 'Medialunas dulces argentinas', price: 3.50 },
+            { restaurant_id: 1, name: 'Tostado', description: 'Sándwich de jamón y queso tostado', price: 10.00 },
+            { restaurant_id: 1, name: 'Jugo de naranja', description: 'Jugo de naranja exprimido', price: 6.00 },
+            { restaurant_id: 1, name: 'Factura', description: 'Factura dulce', price: 4.00 },
         ];
 
         await models.MenuItem.bulkCreate(menuItemsToInsert);
@@ -214,100 +215,6 @@ async function createInitialRestaurantData() {
     };
 }
 
-app.get('/Restaurante', async (req, res) => {
-    try {
-        const restaurantsData = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
-        res.json(restaurantsData);
-    } catch (error) {
-        console.error('Error fetching restaurants:', error);
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
-
-app.get('/local', async (req, res) => {
-    const id = req.query.id;
-    try {
-        const restaurants = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
-        const restaurant = restaurants.find((r) => r.restaurant_id === parseInt(id));
-        if (restaurant) {
-            const formatImages = (imageBuffer) => (imageBuffer ? `data:image/jpeg;base64,${imageBuffer.toString('base64')}` : null);
-            const restaurantWithImages = {
-                ...restaurant,
-                logo: formatImages(restaurant.logo),
-                image0: formatImages(restaurant.image0),
-                image1: formatImages(restaurant.image1),
-                image2: formatImages(restaurant.image2),
-                image3: formatImages(restaurant.image3),
-                image4: formatImages(restaurant.image4),
-            };
-
-            res.json(restaurantWithImages);
-        } else {
-            res.status(404).json({ error: 'Restaurant not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
-
-app.get('/menu', async (req, res) => {
-    const restaurantId = req.query.id;
-    try {
-        const menuItems = await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
-        const filteredItems = menuItems.filter((item) => item.restaurant_id === parseInt(restaurantId));
-        res.json(filteredItems);
-    } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
-
-app.get('/comandas', async (req, res) => {
-    const restaurantId = req.query.id;
-    try {
-        const orders = await models.Order.findAll({
-            where: { restaurant_id: restaurantId },
-            include: [
-                {
-                    model: models.OrderItem,
-                    include: [
-                        {
-                            model: models.MenuItem,
-                            attributes: ['name'],
-                        },
-                    ],
-                },
-                {
-                    model: models.OrderStatus,
-                    attributes: ['status_name'],
-                },
-                {
-                    model: models.User,
-                    attributes: ['username'],
-                },
-            ],
-            order: [['created_at', 'DESC']],
-        });
-
-        const comandas = orders.map((order) => ({
-            id: order.order_id,
-            user: order.User.username,
-            status: order.OrderStatus.status_name,
-            items: order.OrderItems.map((item) => ({
-                productId: item.item_id,
-                name: item.MenuItem.name,
-                quantity: item.quantity,
-                comments: item.comments || 'Sin comentarios',
-            })),
-            created_at: order.created_at,
-        }));
-
-        res.json(comandas);
-    } catch (error) {
-        console.error('Error fetching comandas:', error);
-        res.status(500).json({ error: 'An error occurred while fetching comandas' });
-    }
-});
-
 app.get('/orderStatuses', async (req, res) => {
     try {
         const statuses = await models.OrderStatus.findAll({
@@ -320,40 +227,18 @@ app.get('/orderStatuses', async (req, res) => {
     }
 });
 
-app.post('/crear-restaurante', upload.any(), async (req, res) => {
-    const { nombre, descripcion, latitud, longitud } = req.body,
-        logo = req.files[0],
-        images = req.files.slice(1);
+// NEW LOGIC IS HERE
 
-    const restaurant = await models.Restaurant.create({
-        restaurant_name: nombre,
-        description: descripcion,
-        latitude: latitud,
-        longitude: longitud,
-        logo: logo.buffer,
-        image0: images[0] ? images[0].buffer : {},
-        image1: images[1] ? images[1].buffer : {},
-        image2: images[2] ? images[2].buffer : {},
-        image3: images[3] ? images[3].buffer : {},
-        image4: images[4] ? images[4].buffer : {},
-    });
-    await crearPlatos(req.body.platos, restaurant.restaurant_id);
-    res.status(200).json({
-        message: 'Datos recibidos',
-        data: restaurant,
-    });
-});
+const restaurantModule = setupRestaurantModule(models);
+const menuItemModule = setupMenuItemModule(models);
+const orderModule = setupOrderModule(models);
 
-async function crearPlatos(platos, idRestaurante) {
-    platos.forEach(async (plato) => {
-        await models.MenuItem.create({
-            restaurant_id: idRestaurante,
-            name: plato.nombre,
-            description: plato.nombre,
-            price: plato.precio,
-        });
-    });
-}
+app.use(restaurantModule.router);
+app.use(menuItemModule.router);
+app.use(orderModule.router);
+
+
+// NEW LOGIC IS HERE
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {
@@ -400,17 +285,14 @@ io.on('connection', (socket) => {
                 }
 
                 // Create a new order
-                const order = await models.Order.create(
-                    {
-                        user_id: items[0].userId, // Assuming all items have the same userId
-                        restaurant_id: items[0].restaurantId, // Assuming all items have the same restaurantId
-                        status_id: pendingStatus.status_id,
-                    },
-                    { transaction: transaction },
-                );
+                const order = await models.Order.create({
+                    user_id: items[0].userId, // Assuming all items have the same userId
+                    restaurant_id: items[0].restaurantId, // Assuming all items have the same restaurantId
+                    status_id: pendingStatus.status_id,
+                }, { transaction: transaction });
 
                 // Prepare the order items data for bulk create
-                const orderItemsData = items.map((item) => ({
+                const orderItemsData = items.map(item => ({
                     order_id: order.order_id,
                     item_id: item.id,
                     quantity: item.quantity,
@@ -425,7 +307,7 @@ io.on('connection', (socket) => {
                 // we need to fetch them using findAll with the IDs of created order items.
                 const fullOrderItems = await models.OrderItem.findAll({
                     where: {
-                        order_item_id: orderItems.map((item) => item.order_item_id),
+                        order_item_id: orderItems.map(item => item.order_item_id)
                     },
                     include: [
                         {
@@ -452,23 +334,7 @@ io.on('connection', (socket) => {
                 // Commit the transaction
                 await transaction.commit();
 
-                // Construct and emit the responses for each order item
-                // fullOrderItems.forEach(fullOrderItem => {
-                //     const responseForCart = {
-                //         id: fullOrderItem.order_id,
-                //         name: fullOrderItem.MenuItem.name,
-                //         price: fullOrderItem.price,
-                //         quantity: fullOrderItem.quantity,
-                //         status: fullOrderItem.Order.OrderStatus.status_name,
-                //         restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
-                //         restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
-                //     };
-                //     io.emit('cartUpdated', responseForCart);
-                // });
-                //
-                // const cart = await getCartItemsByUserId(items[0].userId);
-
-                const cartItems = fullOrderItems.map((fullOrderItem) => ({
+                const cartItems = fullOrderItems.map(fullOrderItem => ({
                     id: fullOrderItem.order_id, // Or order_item_id if you prefer
                     name: fullOrderItem.MenuItem.name,
                     price: fullOrderItem.price,
@@ -485,16 +351,17 @@ io.on('connection', (socket) => {
                     id: order.order_id,
                     user: order.user_id.username || 'Jorge', // Debugging placeholder
                     status: pendingStatus.status_name,
-                    items: fullOrderItems.map((fullOrderItem) => ({
+                    items: fullOrderItems.map(fullOrderItem => ({
                         productId: fullOrderItem.item_id,
                         name: fullOrderItem.MenuItem.name,
                         quantity: fullOrderItem.quantity,
                         comments: 'Sin comentarios', // TODO: Allow users to add comments
                     })),
                     created_at: order.created_at,
-                };
+                }
 
                 io.emit('newOrderCreated', responseForComandas);
+
             } catch (error) {
                 // Rollback the transaction in case of any error
                 await transaction.rollback();
@@ -598,3 +465,4 @@ httpServer.listen(PORT, () => {
     pollForDatabaseChanges();
     initializeDatabase();
 });
+

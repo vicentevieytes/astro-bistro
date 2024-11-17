@@ -214,6 +214,7 @@ import '../styles/global.css';
 		formData.append('descripcion', descripcionInput?.value);
 
 		// Agregar los datos de cada plato
+		// TODO: Cambiar de platos a menuItems o algo que esté más relacionado con el negocio
 		const platoItems = document.querySelectorAll('.plato-item');
 		platoItems.forEach((item, index) => {
 			const nombreInput = item.querySelector('input[name="platoNombre[]"]') as HTMLInputElement;
@@ -236,7 +237,7 @@ import '../styles/global.css';
 		}
 
 		// Enviar los datos al servidor
-		fetch('http://localhost:5001/crear-restaurante', {
+		fetch('http://localhost:5001/restaurantes', {
 			method: 'POST',
 			body: formData,
 		})
