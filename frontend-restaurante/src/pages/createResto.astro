@@ -237,7 +237,7 @@ import '../styles/global.css';
 		}
 
 		// Enviar los datos al servidor
-		fetch('http://localhost:5001/crear-restaurante', {
+		fetch('http://localhost:5001/restaurantes', { // Did I break anything by changing this endpoint from /crear-restaurante to POST /restaurantes?
 			method: 'POST',
 			body: formData,
 		})

@@ -36,7 +36,7 @@ import '../styles/global.css';
 				L.marker(ciudadUniversitariaCoords).addTo(map).bindPopup('<h3>Ciudad Universitaria</h3><p>Buenos Aires</p>').openPopup();
 
 				// Simular algunos locales cercanos con descripciones detalladas
-				const localesResponse = await fetch('http://localhost:5001/restaurante'),
+				const localesResponse = await fetch('http://localhost:5001/restaurantes'),
 					localesData = (await localesResponse.json()) as restaurante[];
 
 				// Agregar marcadores de locales cercanos con descripciones detalladas

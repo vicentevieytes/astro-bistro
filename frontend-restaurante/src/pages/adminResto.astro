@@ -6,7 +6,7 @@ import '../styles/global.css';
 // Obtener el ID del restaurante desde los parámetros de la URL
 const url = new URL(Astro.request.url),
     localId = url.searchParams.get('id'),
-    response = await fetch(`http://localhost:5001/local?id=${localId}`),
+    response = await fetch(`http://localhost:5001/restaurantes?id=${localId}`), // Did I break anything by changing this endpoint?
     data = await response.json(),
     localData = data[0];
 
