@@ -297,42 +297,6 @@ app.use(restaurantRouter);
 
 // NEW LOGIC COMES HERE
 
-// TODO: i am changing from "crear-restaurante" to "restaurante" because it is already a post request
-app.post('/crear-restaurante', upload.any(), async (req, res) => {
-    const { nombre, descripcion, latitud, longitud } = req.body,
-        logo = req.files[0],
-        images = req.files.slice(1);
-
-    const restaurant = await models.Restaurant.create({
-        restaurant_name: nombre,
-        description: descripcion,
-        latitude: latitud,
-        longitude: longitud,
-        logo: logo.buffer,
-        image0: images[0] ? images[0].buffer : {},
-        image1: images[1] ? images[1].buffer : {},
-        image2: images[2] ? images[2].buffer : {},
-        image3: images[3] ? images[3].buffer : {},
-        image4: images[4] ? images[4].buffer : {},
-    });
-    await crearPlatos(req.body.platos, restaurant.restaurant_id);
-    res.status(200).json({
-        message: 'Datos recibidos',
-        data: restaurant,
-    });
-});
-
-async function crearPlatos(platos, idRestaurante) {
-    platos.forEach(async (plato) => {
-        await models.MenuItem.create({
-            restaurant_id: idRestaurante,
-            name: plato.nombre,
-            description: plato.nombre,
-            price: plato.precio,
-        });
-    });
-}
-
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {
     const { sheetName } = req.body;
@@ -426,22 +390,6 @@ io.on('connection', (socket) => {
 
                 // Commit the transaction
                 await transaction.commit();
-
-                // Construct and emit the responses for each order item
-                // fullOrderItems.forEach(fullOrderItem => {
-                //     const responseForCart = {
-                //         id: fullOrderItem.order_id,
-                //         name: fullOrderItem.MenuItem.name,
-                //         price: fullOrderItem.price,
-                //         quantity: fullOrderItem.quantity,
-                //         status: fullOrderItem.Order.OrderStatus.status_name,
-                //         restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
-                //         restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
-                //     };
-                //     io.emit('cartUpdated', responseForCart);
-                // });
-                //
-                // const cart = await getCartItemsByUserId(items[0].userId);
 
                 const cartItems = fullOrderItems.map(fullOrderItem => ({
                     id: fullOrderItem.order_id, // Or order_item_id if you prefer
