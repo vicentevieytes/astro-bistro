@@ -1,10 +1,10 @@
-import User from '../../../orm_models/User.js';
+import User from './User.js';
 import Restaurant from './Restaurant.js';
 import MenuItem from './MenuItem.js';
-import OrderStatus from '../../../orm_models/OrderStatus.js';
-import Order from '../../../orm_models/Order.js';
+import OrderStatus from './OrderStatus.js';
+import Order from './Order.js';
 import OrderStatusHistory from '../../../orm_models/OrderStatusHistory.js';
-import OrderItem from '../../../orm_models/OrderItem.js';
+import OrderItem from './OrderItem.js';
 
 export default function initModels(sequelize) {
     const models = {

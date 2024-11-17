@@ -7,7 +7,7 @@ const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la U
 
 // Hacer fetch para obtener las comandas
 let comandas = [];
-const responseComandas = await fetch(`http://localhost:5001/comandas?id=${localId}`); // TODO: /restaurante/id/comandas ???
+const responseComandas = await fetch(`http://localhost:5001/restaurantes/${localId}/comandas`);
 comandas = await responseComandas.json();
 
 // Hacer fetch para obtener todos los estados

@@ -1,4 +1,4 @@
-import {MenuItem} from "./MenuItem.js";
+import { MenuItem } from "./MenuItem.js";
 
 export class Restaurant {
     constructor({

@@ -216,53 +216,6 @@ async function createInitialRestaurantData() {
 
 // TODO: Change '/comandas' to '/restaurants/:id/comandas'
 
-app.get('/comandas', async (req, res) => {
-    const restaurantId = req.query.id;
-    try {
-        const orders = await models.Order.findAll({
-            where: { restaurant_id: restaurantId },
-            include: [
-                {
-                    model: models.OrderItem,
-                    include: [
-                        {
-                            model: models.MenuItem,
-                            attributes: ['name'],
-                        },
-                    ],
-                },
-                {
-                    model: models.OrderStatus,
-                    attributes: ['status_name'],
-                },
-                {
-                    model: models.User,
-                    attributes: ['username'],
-                },
-            ],
-            order: [['created_at', 'DESC']],
-        });
-
-        const comandas = orders.map((order) => ({
-            id: order.order_id,
-            user: order.User.username,
-            status: order.OrderStatus.status_name,
-            items: order.OrderItems.map((item) => ({
-                productId: item.item_id,
-                name: item.MenuItem.name,
-                quantity: item.quantity,
-                comments: item.comments || 'Sin comentarios',
-            })),
-            created_at: order.created_at,
-        }));
-
-        res.json(comandas);
-    } catch (error) {
-        console.error('Error fetching comandas:', error);
-        res.status(500).json({ error: 'An error occurred while fetching comandas' });
-    }
-});
-
 app.get('/orderStatuses', async (req, res) => {
     try {
         const statuses = await models.OrderStatus.findAll({

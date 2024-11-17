@@ -1,8 +1,9 @@
 export class RestaurantController {
-    constructor(restaurantService, menuItemService) {
+    constructor(restaurantService, menuItemService, orderService) {
         this.service = restaurantService;
         // TODO: Is it fine for the RestaurantController to know about the MenuItemService?
         this.menuItemService = menuItemService;
+        this.orderService = orderService;
     }
 
     async getRestaurants(req, res, next) {
@@ -18,15 +19,6 @@ export class RestaurantController {
     async getRestaurant(req, res, next) {
         try {
             const restaurant = await this.service.getRestaurantById(req.params.id);
-
-            console.log(restaurant);
-
-            console.log("B")
-
-            console.log(restaurant.toJSON());
-
-            console.log("A")
-
             res.json(restaurant);
         } catch (error) {
             next(error);
@@ -67,4 +59,17 @@ export class RestaurantController {
         }
     }
 
+    async getOrders(req, res, next) {
+        try {
+            const restaurantId = req.params.id;
+
+            // Optionally verify restaurant exists first
+            await this.service.getRestaurantById(restaurantId);
+
+            const orders = await this.orderService.getRestaurantOrders(restaurantId);
+            res.json(orders);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
