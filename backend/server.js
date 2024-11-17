@@ -214,19 +214,6 @@ async function createInitialRestaurantData() {
     };
 }
 
-// TODO: Change '/menu' to '/restaurants/:id/menu'
-
-app.get('/menu', async (req, res) => {
-    const restaurantId = req.query.id;
-    try {
-        const menuItems = await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
-        const filteredItems = menuItems.filter((item) => item.restaurant_id === parseInt(restaurantId));
-        res.json(filteredItems);
-    } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
-
 // TODO: Change '/comandas' to '/restaurants/:id/comandas'
 
 app.get('/comandas', async (req, res) => {

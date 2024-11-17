@@ -14,7 +14,7 @@ let menuData = [],
 	restauranteData = [];
 
 if (localId) {
-	const response = await fetch(`http://localhost:5001/menu?id=${localId}`),
+	const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`),
 		responseRestaurante = await fetch(`http://localhost:5001/restaurantes?id=${localId}`);
 	restauranteData = await responseRestaurante.json();
 	menuData = await response.json(); // Obtener el menú desde el backend

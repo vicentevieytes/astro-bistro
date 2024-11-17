@@ -1,6 +1,8 @@
 export class RestaurantController {
-    constructor(restaurantService) {
+    constructor(restaurantService, menuItemService) {
         this.service = restaurantService;
+        // TODO: Is it fine for the RestaurantController to know about the MenuItemService?
+        this.menuItemService = menuItemService;
     }
 
     async getRestaurants(req, res, next) {
@@ -55,6 +57,14 @@ export class RestaurantController {
         }
     }
 
-
+    // TODO: Maybe this should be in a different controller...
+    async getMenu(req, res, next) {
+        try {
+            const menuItems = await this.menuItemService.getMenuByRestaurantId(req.params.id);
+            res.json(menuItems);
+        } catch (error) {
+            next(error);
+        }
+    }
 
 }

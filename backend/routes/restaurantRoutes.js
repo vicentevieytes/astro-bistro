@@ -13,6 +13,7 @@ export function createRestaurantRouter(restaurantController) {
         upload.any(),
         restaurantController.createRestaurant.bind(restaurantController)
     );
+    router.get('/restaurantes/:id/menu', restaurantController.getMenu.bind(restaurantController));
 
     return router;
 }
