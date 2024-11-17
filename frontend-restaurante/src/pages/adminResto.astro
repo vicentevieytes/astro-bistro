@@ -14,29 +14,79 @@ console.log(data);
 ---
 
 <Layout title="Administrar restaurante | Restaurantes">
-    <main>
-        <h1>
-            Administrar <span class="text-gradient">restaurante</span>
-        </h1>
-        <ul role="list" class="link-card">
-            <Card href={`/adminLocal?id=${localId}`} title="Gestionar Local" body="Configura la información de tu local." />
-            <Card href={`/adminMenu?id=${localId}`} title="Gestionar Menú" body="Administra los platos de tu menú." />
-            <Card href={`/comandas?id=${localId}`} title="Gestionar Comandas" body="Maneja las comandas de tus clientes." />
-        </ul>
-    </main>
+	<main>
+		<!-- Logo and Restaurant Name Section -->
+		<div class="restaurant-header">
+			<img
+				src={data.logo}
+				alt={`${data.restaurant_name} Logo`}
+				class="restaurant-logo"
+			/>
+			<h1>
+				Administrar <span class="text-gradient">{data.restaurant_name}</span>
+			</h1>
+		</div>
+		<ul
+			role="list"
+			class="link-card">
+			<Card
+				href={`/adminLocal?id=${localId}`}
+				title="Gestionar Local (Próximamente)"
+				body="Configura la información de tu local."
+			/>
+			<Card
+				href={`/adminMenu?id=${localId}`}
+				title="Gestionar Menú (Próximamente)"
+				body="Administra los platos de tu menú."
+			/>
+			<Card
+				href={`/comandas?id=${localId}`}
+				title="Gestionar Comandas"
+				body="Maneja las comandas de tus clientes."
+			/>
+		</ul>
+	</main>
 </Layout>
 
 <style>
-    /* Estilo para las cards */
-    .link-card {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem; /* Espacio entre las cards */
-    }
+	/* Estilo para las cards */
+	.link-card {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem; /* Espacio entre las cards */
+	}
 
-    .link-card li {
-        list-style: none; /* Quitar viñetas de la lista */
-    }
+	.link-card li {
+		list-style: none; /* Quitar viñetas de la lista */
+	}
 
-    /* Puedes añadir más estilos aquí según sea necesario */
+	.restaurant-header {
+		text-align: center;
+		margin-bottom: 2rem;
+	}
+
+	.restaurant-logo {
+		width: 150px;
+		height: auto;
+		border-radius: 50%;
+		margin-bottom: 1rem;
+	}
+
+	.restaurant-images {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 1rem;
+		margin-top: 2rem;
+		justify-items: center;
+	}
+
+	.restaurant-image {
+		width: 100%;
+		max-width: 200px;
+		height: auto;
+		border-radius: 8px;
+		object-fit: cover;
+	}
+
+	/* Puedes añadir más estilos aquí según sea necesario */
 </style>

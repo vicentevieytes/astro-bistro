@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import multer from 'multer';
 import dotenv from 'dotenv';
+import { convertToJSON } from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
 
 import { createServer } from 'http';
@@ -118,6 +119,8 @@ async function fetchRestaurantsFromDB() {
             'created_at',
         ],
     });
+
+    // console.log(restaurants);
 
     return restaurants.map((restaurant) => restaurant.get({ plain: true }));
 }
@@ -462,3 +465,4 @@ httpServer.listen(PORT, () => {
     pollForDatabaseChanges();
     initializeDatabase();
 });
+
