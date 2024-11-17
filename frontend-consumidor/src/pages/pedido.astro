@@ -5,9 +5,7 @@ import '../styles/global.css';
 
 import Cart from '../components/Cart.astro';
 
-
 import type { itemMenu, restaurante } from '../utils/CustomTypes';
-
 
 const urlParams = new URLSearchParams(Astro.url.search);
 let localId = urlParams.get('id');
@@ -28,6 +26,7 @@ if (localId) {
 console.log(menuData)
 ---
 
+
 <Layout title="Hacer Pedido">
     <main>
         <Cart />
@@ -45,7 +44,7 @@ console.log(menuData)
                 <label for="quantity">Cantidad:</label>
                 <input type="number" id="quantity" name="quantity" min="1" required />
             </div>
-            <button type="submit" class="submit-button">Agregar al pedido</button>
+            <button type="button" id="add-to-summary" class="submit-button">Agregar al pedido</button>
         </form>
 
         {/* Resumen del pedido */}
@@ -53,6 +52,7 @@ console.log(menuData)
             <h2>Resumen del Pedido</h2>
             <ul id="summary-list"></ul>
             <h3>Total: $<span id="total-price">0.00</span></h3>
+            <button type="button" id="submit-order" class="submit-button">Realizar Pedido</button>
         </section>
         <ul role="list" class="link-card-grid">
             <Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
@@ -64,10 +64,16 @@ console.log(menuData)
 <script>
     import { io } from "socket.io-client";
 
-    const socket = io('http://localhost:5001');
-    const orderForm = document.getElementById('order-form') as HTMLFormElement;
-    const dishSelect = document.getElementById('dish');
-    const restaurantNameSpan = document.getElementById('restaurant-name');
+        const socket = io('http://localhost:5001');
+        const orderForm = document.getElementById('order-form') as HTMLFormElement;
+        const dishSelect = document.getElementById('dish');
+        const restaurantNameSpan = document.getElementById('restaurant-name');
+        const addToSummaryButton = document.getElementById('add-to-summary'); // New button
+        const submitOrderButton = document.getElementById('submit-order'); // New button
+        const summaryList = document.getElementById('summary-list');
+        const totalPriceSpan = document.getElementById('total-price');
+
+        let orderSummary = []; // Array to store items in the order summary
 
     async function updatePageContent() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -101,47 +107,59 @@ console.log(menuData)
         }
     }
 
-    // Call updatePageContent on initial load
-    updatePageContent();
+        updatePageContent();
+        window.addEventListener('popstate', updatePageContent);
 
-    // Listen for navigation events (e.g., back/forward buttons)
-    window.addEventListener('popstate', updatePageContent);
+        // Function to update the displayed order summary and total price
+        function updateOrderSummaryDisplay() {
+            summaryList.innerHTML = ''; // Clear the current list
+            let totalPrice = 0;
 
-    orderForm?.addEventListener('submit', (event) => {
-        event.preventDefault();
+            orderSummary.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${item.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
+                summaryList.appendChild(listItem);
+                totalPrice += item.price * item.quantity;
+                });
 
-        const quantityInput = document.getElementById('quantity');
-        const dishId = dishSelect.value;
-        const quantity = parseInt(quantityInput.value);
+            totalPriceSpan.textContent = totalPrice.toFixed(2);
+            }
 
-        const selectedDish = dishSelect.options[dishSelect.selectedIndex];
+        addToSummaryButton?.addEventListener('click', () => {
+            const quantityInput = document.getElementById('quantity');
+            const dishId = dishSelect.value;
+            const quantity = parseInt(quantityInput.value);
+            const selectedDish = dishSelect.options[dishSelect.selectedIndex];
 
-        if (selectedDish) {
-            const dishName = selectedDish.textContent?.split(' - ')[0] || '';
-            const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
+            if (selectedDish) {
+                const dishName = selectedDish.textContent?.split(' - ')[0] || '';
+                const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
+                const localId = orderForm.dataset.localId;
+                const userId = 1; // Hardcoded for now
 
-            const localId = orderForm.dataset.localId;
-            const restaurantName = orderForm.dataset.restaurantName;
+                const newItem = {
+                    id: dishId,
+                    userId: userId,
+                    name: dishName,
+                    price: dishPrice,
+                    quantity: quantity,
+                    restaurantId: localId,
+                    };
 
-            // TODO: This is hardcoded for now:
-            const userId = 1;
+                orderSummary.push(newItem); // Add the item to the order summary
+                updateOrderSummaryDisplay(); // Update the display
+                }
 
-            const newItem = {
-                id: dishId,
-                userId: userId,
-                name: dishName,
-                price: dishPrice,
-                quantity: quantity,
-                restaurantId: localId,
-            };
+            orderForm.reset();
+            });
 
-            console.log(localId);
-
-            socket.emit('addToCart', newItem);
-        }
-
-        orderForm.reset();
-    });
+        submitOrderButton?.addEventListener('click', () => {
+            if (orderSummary.length > 0) {
+                socket.emit('addToCart', orderSummary); // Emit the entire order summary
+                orderSummary = []; // Clear the order summary after submission
+                updateOrderSummaryDisplay(); // Update the display to clear the list
+                }
+            });
 </script>
 
 

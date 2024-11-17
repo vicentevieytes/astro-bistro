@@ -366,90 +366,217 @@ const PORT = process.env.PORT || 5001;
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    socket.on('addToCart', async (item) => {
+    socket.on('addToCart', async (items) => {
         try {
-            // First, make sure we have a valid OrderStatus for Pending orders
-            const pendingStatus = await models.OrderStatus.findOne({ where: { status_name: 'Aguardando aceptación' } });
-
-            if (!pendingStatus) {
-                throw new Error('Pending OrderStatus not found');
+            // Validate that 'items' is an array and it's not empty
+            if (!Array.isArray(items) || items.length === 0) {
+                throw new Error('Invalid or empty items list');
             }
 
-            // TODO: Allow different items to belong to the same order.
+            // Start a transaction
+            const transaction = await sequelize.transaction();
 
-            let order = await models.Order.create({
-                user_id: item.userId,
-                restaurant_id: item.restaurantId,
-                status_id: pendingStatus.status_id, // Use the actual status_id from the database
-            });
+            try {
+                // Find the pending order status
+                const pendingStatus = await models.OrderStatus.findOne({
+                    where: { status_name: 'Aguardando aceptación' },
+                    transaction: transaction,
+                });
 
-            console.log(item);
-            console.log('EPA');
+                if (!pendingStatus) {
+                    throw new Error('Pending OrderStatus not found');
+                }
 
-            const orderItem = await models.OrderItem.create({
-                order_id: order.order_id,
-                item_id: item.id,
-                quantity: item.quantity,
-                price: item.price,
-            });
+                // Create a new order
+                const order = await models.Order.create({
+                    user_id: items[0].userId, // Assuming all items have the same userId
+                    restaurant_id: items[0].restaurantId, // Assuming all items have the same restaurantId
+                    status_id: pendingStatus.status_id,
+                }, { transaction: transaction });
 
-            const fullOrderItem = await models.OrderItem.findOne({
-                where: { order_item_id: orderItem.order_item_id },
-                include: [
-                    {
-                        model: models.MenuItem,
-                        attributes: ['name', 'description'],
+                // Prepare the order items data for bulk create
+                const orderItemsData = items.map(item => ({
+                    order_id: order.order_id,
+                    item_id: item.id,
+                    quantity: item.quantity,
+                    price: item.price,
+                }));
+
+                // Bulk create order items
+                const orderItems = await models.OrderItem.bulkCreate(orderItemsData, { transaction: transaction });
+
+                // Fetch the full order items with related data (for response and emitting)
+                // Since bulkCreate doesn't return the full instances with associations,
+                // we need to fetch them using findAll with the IDs of created order items.
+                const fullOrderItems = await models.OrderItem.findAll({
+                    where: {
+                        order_item_id: orderItems.map(item => item.order_item_id)
                     },
-                    {
-                        model: models.Order,
-                        include: [
-                            {
-                                model: models.OrderStatus,
-                                attributes: ['status_name'],
-                            },
-                            {
-                                model: models.Restaurant,
-                                attributes: ['restaurant_id', 'restaurant_name'],
-                            },
-                        ],
-                    },
-                ],
-            });
+                    include: [
+                        {
+                            model: models.MenuItem,
+                            attributes: ['name', 'description'],
+                        },
+                        {
+                            model: models.Order,
+                            include: [
+                                {
+                                    model: models.OrderStatus,
+                                    attributes: ['status_name'],
+                                },
+                                {
+                                    model: models.Restaurant,
+                                    attributes: ['restaurant_id', 'restaurant_name'],
+                                },
+                            ],
+                        },
+                    ],
+                    transaction: transaction,
+                });
 
-            // TODO: Transform this data somewhere else.
-            const response = {
-                id: fullOrderItem.order_id, // TODO: We are sending the order id instead of the order_item_id.
-                //  We should send both.
-                name: fullOrderItem.MenuItem.name,
-                price: fullOrderItem.price,
-                quantity: fullOrderItem.quantity,
-                status: fullOrderItem.Order.OrderStatus.status_name,
-                restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
-                restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
-            };
+                // Commit the transaction
+                await transaction.commit();
 
-            io.emit('cartUpdated', response);
+                // Construct and emit the responses for each order item
+                // fullOrderItems.forEach(fullOrderItem => {
+                //     const responseForCart = {
+                //         id: fullOrderItem.order_id,
+                //         name: fullOrderItem.MenuItem.name,
+                //         price: fullOrderItem.price,
+                //         quantity: fullOrderItem.quantity,
+                //         status: fullOrderItem.Order.OrderStatus.status_name,
+                //         restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
+                //         restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
+                //     };
+                //     io.emit('cartUpdated', responseForCart);
+                // });
+                //
+                // const cart = await getCartItemsByUserId(items[0].userId);
 
-            // TODO: THIS IS NOT IMPLEMENTED YET: Emit something to update the comanda too.
-            io.emit('newOrderCreated', {
-                id: order.order_id,
-                user: order.user_id.username || 'Jorge', // Jorge is there for debugging purposes
-                status: pendingStatus.status_name,
-                items: [
-                    {
-                        productId: orderItem.item_id,
+                const cartItems = fullOrderItems.map(fullOrderItem => ({
+                    id: fullOrderItem.order_id, // Or order_item_id if you prefer
+                    name: fullOrderItem.MenuItem.name,
+                    price: fullOrderItem.price,
+                    quantity: fullOrderItem.quantity,
+                    status: fullOrderItem.Order.OrderStatus.status_name,
+                    restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
+                    restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
+                }));
+
+                io.emit('cartUpdated', cartItems); // Emit the array of cart items
+
+                // TODO: THIS IS NOT USED YET: Emit something to update the comanda too.
+                const responseForComandas = {
+                    id: order.order_id,
+                    user: order.user_id.username || 'Jorge', // Debugging placeholder
+                    status: pendingStatus.status_name,
+                    items: fullOrderItems.map(fullOrderItem => ({
+                        productId: fullOrderItem.item_id,
                         name: fullOrderItem.MenuItem.name,
-                        quantity: orderItem.quantity,
+                        quantity: fullOrderItem.quantity,
                         comments: 'Sin comentarios', // TODO: Allow users to add comments
-                    },
-                ],
-                created_at: order.created_at,
-            });
+                    })),
+                    created_at: order.created_at,
+                }
+
+                io.emit('newOrderCreated', responseForComandas);
+
+            } catch (error) {
+                // Rollback the transaction in case of any error
+                await transaction.rollback();
+                throw error; // Re-throw the error to be caught in the outer catch block
+            }
         } catch (error) {
-            console.error('Error adding item to cart:', error);
-            socket.emit('error', 'Failed to add item to cart');
+            console.error('Error adding items to cart:', error);
+            socket.emit('error', 'Failed to add items to cart');
         }
     });
+
+
+    // socket.on('addToCart', async (item) => {
+    //     try {
+    //         // First, make sure we have a valid OrderStatus for Pending orders
+    //         const pendingStatus = await models.OrderStatus.findOne({ where: { status_name: 'Aguardando aceptación' } });
+    //
+    //         if (!pendingStatus) {
+    //             throw new Error('Pending OrderStatus not found');
+    //         }
+    //
+    //         // TODO: Allow different items to belong to the same order.
+    //
+    //         let order = await models.Order.create({
+    //             user_id: item.userId,
+    //             restaurant_id: item.restaurantId,
+    //             status_id: pendingStatus.status_id, // Use the actual status_id from the database
+    //         });
+    //
+    //         console.log(item);
+    //         console.log('EPA');
+    //
+    //         const orderItem = await models.OrderItem.create({
+    //             order_id: order.order_id,
+    //             item_id: item.id,
+    //             quantity: item.quantity,
+    //             price: item.price,
+    //         });
+    //
+    //         const fullOrderItem = await models.OrderItem.findOne({
+    //             where: { order_item_id: orderItem.order_item_id },
+    //             include: [
+    //                 {
+    //                     model: models.MenuItem,
+    //                     attributes: ['name', 'description'],
+    //                 },
+    //                 {
+    //                     model: models.Order,
+    //                     include: [
+    //                         {
+    //                             model: models.OrderStatus,
+    //                             attributes: ['status_name'],
+    //                         },
+    //                         {
+    //                             model: models.Restaurant,
+    //                             attributes: ['restaurant_id', 'restaurant_name'],
+    //                         },
+    //                     ],
+    //                 },
+    //             ],
+    //         });
+    //
+    //         // TODO: Transform this data somewhere else.
+    //         const response = {
+    //             id: fullOrderItem.order_id, // TODO: We are sending the order id instead of the order_item_id.
+    //             //  We should send both.
+    //             name: fullOrderItem.MenuItem.name,
+    //             price: fullOrderItem.price,
+    //             quantity: fullOrderItem.quantity,
+    //             status: fullOrderItem.Order.OrderStatus.status_name,
+    //             restaurantId: fullOrderItem.Order.Restaurant.restaurant_id,
+    //             restaurantName: fullOrderItem.Order.Restaurant.restaurant_name,
+    //         };
+    //
+    //         io.emit('cartUpdated', response);
+    //
+    //         // TODO: THIS IS NOT IMPLEMENTED YET: Emit something to update the comanda too.
+    //         io.emit('newOrderCreated', {
+    //             id: order.order_id,
+    //             user: order.user_id.username || 'Jorge', // Jorge is there for debugging purposes
+    //             status: pendingStatus.status_name,
+    //             items: [
+    //                 {
+    //                     productId: orderItem.item_id,
+    //                     name: fullOrderItem.MenuItem.name,
+    //                     quantity: orderItem.quantity,
+    //                     comments: 'Sin comentarios', // TODO: Allow users to add comments
+    //                 },
+    //             ],
+    //             created_at: order.created_at,
+    //         });
+    //     } catch (error) {
+    //         console.error('Error adding item to cart:', error);
+    //         socket.emit('error', 'Failed to add item to cart');
+    //     }
+    // });
 
     socket.on('fetchCart', async (userId) => {
         try {
