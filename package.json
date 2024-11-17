@@ -8,7 +8,9 @@
         "astro": "astro",
         "backend": "cd backend && node server.js",
         "consumidorFE": "cd frontend-consumidor && astro dev",
-        "restauranteFE": "cd frontend-restaurante && astro dev"
+        "restauranteFE": "cd frontend-restaurante && astro dev",
+        "install-consumidor": "cd frontend-consumidor && npm install",
+        "install-restaurante": "cd frontend-restaurante && npm install"
     },
     "dependencies": {
         "@astrojs/check": "^0.9.4",

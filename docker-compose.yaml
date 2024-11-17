@@ -8,4 +8,27 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./backend/verLaCarta_dump.sql:/docker-entrypoint-initdb.d/verLaCartaDump.sql
+
+  frontend-consumidor:
+    image: astro-bistro
+    hostname: frontend-consumidor
+    ports: 
+      - "4321:4321"
+    entrypoint: ["npm", "run", "consumidorFE"]
+
+  frontend-restaurante:
+    image: astro-bistro
+    hostname: frontend-restaurante
+    ports:
+      - "4322:4321"
+    entrypoint: ["npm", "run", "restauranteFE"]
+
+  backend:
+    image: astro-bistro
+    hostname: backend
+    ports:
+      - "5001:5001"
+    entrypoint: ["npm", "run", "backend"]
+
+
  
