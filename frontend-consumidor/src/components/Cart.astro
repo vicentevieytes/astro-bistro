@@ -74,15 +74,16 @@ console.log(groupedItems);
         renderCart();
     });
 
-    socket.on('cartUpdated', (item) => {
-        const existingItemIndex = cartItems.findIndex(i => i.id === item.id);
-        if (existingItemIndex !== -1) {
-            cartItems[existingItemIndex] = item;
-        } else {
-            cartItems.push(item);
-        }
+    socket.on('cartUpdated', (newItems) => { // Receive the newItems array
+        console.log("Cart updated with new items:", newItems);
+
+        newItems.forEach(newItem => {
+            cartItems.push(newItem);
+        });
+
         renderCart();
     });
+
 
     socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
         console.log("Order status update received", orderId, newStatus);

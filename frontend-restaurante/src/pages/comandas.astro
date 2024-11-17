@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Card from '../components/Card.astro';
 import '../styles/global.css';
 
 const urlParams = new URLSearchParams(Astro.url.search);
@@ -8,101 +7,108 @@ const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la U
 
 // Hacer fetch para obtener las comandas
 let comandas = [];
-const responseComandas = await fetch(`http://localhost:5001/comandas?id=${localId}`);
+const responseComandas = await fetch(`http://localhost:5001/restaurantes/${localId}/comandas`);
 comandas = await responseComandas.json();
 
 // Hacer fetch para obtener todos los estados
-const responseStates = await fetch('http://localhost:5001/orderStatuses');
+const responseStates = await fetch('http://localhost:5001/orderStatuses'); // TODO: Change endpoint to: ?
 const estados = await responseStates.json();
-
 ---
 
 <script>
-    import { io } from "socket.io-client";
-    const socket = io('http://localhost:5001');
+	import { io } from 'socket.io-client';
+	const socket = io('http://localhost:5001');
 
-    document.querySelectorAll('select[name^="estado-"]').forEach((select) => {
-        select.addEventListener('change', function (event) {
-            const target = event.target as HTMLSelectElement;
-            const orderId = parseInt(target.id.split('-')[1]);
-            console.log(orderId);
-            const newStatusId = parseInt(target.value);
-            handleStateChange(orderId, newStatusId);
-        });
-    });
+	document.querySelectorAll('select[name^="estado-"]').forEach((select) => {
+		select.addEventListener('change', function (event) {
+			const target = event.target as HTMLSelectElement;
+			const orderId = parseInt(target.id.split('-')[1]);
+			console.log(orderId);
+			const newStatusId = parseInt(target.value);
+			handleStateChange(orderId, newStatusId);
+		});
+	});
 
-    async function handleStateChange(orderId: number, newStatusId: number) {
-        try {
-            // Emit the updateOrderStatus event
-            socket.emit('updateOrderStatus', { orderId, newStatusId });
+	async function handleStateChange(orderId: number, newStatusId: number) {
+		try {
+			// Emit the updateOrderStatus event
+			socket.emit('updateOrderStatus', { orderId, newStatusId });
 
-            // Optionally, you can show a loading indicator here
-            console.log('Updating order status...');
-        } catch (error) {
-            console.error('Error al emitir el cambio de estado:', error);
-            // Optionally, show an error message to the user
-        }
-    }
+			// Optionally, you can show a loading indicator here
+			console.log('Updating order status...');
+		} catch (error) {
+			console.error('Error al emitir el cambio de estado:', error);
+			// Optionally, show an error message to the user
+		}
+	}
 
-    // Listen for real-time updates
-    socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
-        const statusSelect = document.getElementById(`estado-${orderId}`) as HTMLSelectElement;
-        if (statusSelect) {
-            const statusOption = Array.from(statusSelect.options).find(option => option.text === newStatus);
-            if (statusOption) {
-                statusSelect.value = statusOption.value;
-            }
-            console.log(`Order ${orderId} status updated to ${newStatus}`);
-        }
-    });
-
+	// Listen for real-time updates
+	socket.on('orderStatusUpdated', ({ orderId, newStatus }) => {
+		const statusSelect = document.getElementById(`estado-${orderId}`) as HTMLSelectElement;
+		if (statusSelect) {
+			const statusOption = Array.from(statusSelect.options).find((option) => option.text === newStatus);
+			if (statusOption) {
+				statusSelect.value = statusOption.value;
+			}
+			console.log(`Order ${orderId} status updated to ${newStatus}`);
+		}
+	});
 </script>
 
 <Layout title="Comandas">
-    <main>
-        <h1>
-            <span class="text-gradient">Comandas</span> recibidas
-        </h1>
-        <ul role="list" class="link-card">
-            {comandas.map((comanda) => (
-                    <li class="link-card">
-                        <h2>Orden #{comanda.id} - Usuario: {comanda.user}</h2>
-                        <p>Fecha: {new Date(comanda.created_at).toLocaleString()}</p>
-                        <ul>
-                            {comanda.items.map((item) => (
-                                    <li>
-                                        {item.name} - Cantidad: {item.quantity}
-                                        {item.comments && ` - Comentarios: ${item.comments}`}
-                                    </li>
-                            ))}
-                        </ul>
-                        <label for={`estado-${comanda.id}`}>Estado:</label>
-                        <select id={`estado-${comanda.id}`} name={`estado-${comanda.id}`}>
-                            {estados.map((estado) => (
-                                    <option value={estado.status_id} selected={estado.status_name === comanda.status}>
-                                        {estado.status_name}
-                                    </option>
-                            ))}
-                        </select>
-                    </li>
-            ))}
-        </ul>
-        {comandas.length === 0 && <p>No hay comandas registradas.</p>}
-    </main>
+	<main>
+		<h1>
+			<span class="text-gradient">Comandas</span> recibidas
+		</h1>
+		<ul
+			role="list"
+			class="link-card">
+			{
+				comandas?.map((comanda) => (
+					<li class="link-card">
+						<h2>
+							Orden #{comanda.id} - Usuario: {comanda.user}
+						</h2>
+						<p>Fecha: {new Date(comanda.created_at).toLocaleString()}</p>
+						<ul>
+							{comanda.items.map((item) => (
+								<li>
+									{item.name} - Cantidad: {item.quantity}
+									{item.comments && ` - Comentarios: ${item.comments}`}
+								</li>
+							))}
+						</ul>
+						<label for={`estado-${comanda.id}`}>Estado:</label>
+						<select
+							id={`estado-${comanda.id}`}
+							name={`estado-${comanda.id}`}>
+							{estados.map((estado) => (
+								<option
+									value={estado.status_id}
+									selected={estado.status_name === comanda.status}>
+									{estado.status_name}
+								</option>
+							))}
+						</select>
+					</li>
+				))
+			}
+		</ul>
+		{comandas.length === 0 && <p>No hay comandas registradas.</p>}
+	</main>
 </Layout>
 
-
 <style>
-    .link-card {
-        list-style: none;
-        padding: 1rem;
-        margin: 1rem 0;
-        background-color: #23262d;
-        border-radius: 7px;
-        color: white;
-    }
-    .link-card p {
-        margin: 0.5rem 0;
-        display: inline-block; /* Para asegurarse de que todos los elementos estén en una sola línea */
-    }
+	.link-card {
+		list-style: none;
+		padding: 1rem;
+		margin: 1rem 0;
+		background-color: #23262d;
+		border-radius: 7px;
+		color: white;
+	}
+	.link-card p {
+		margin: 0.5rem 0;
+		display: inline-block; /* Para asegurarse de que todos los elementos estén en una sola línea */
+	}
 </style>

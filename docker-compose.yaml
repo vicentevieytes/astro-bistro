@@ -30,5 +30,4 @@ services:
       - "5001:5001"
     entrypoint: ["npm", "run", "backend"]
 
-
  

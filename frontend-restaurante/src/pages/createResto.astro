@@ -4,78 +4,162 @@ import '../styles/global.css';
 ---
 
 <head>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+	<link
+		rel="stylesheet"
+		href="https://unpkg.com/leaflet/dist/leaflet.css"
+	/>
+	<meta charset="UTF-8" />
+	<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+	/>
 </head>
 
 <Layout title="Crear restaurante | Restaurantes">
-    <main>
-        <h1>
-            Crea <span class="text-gradient">tu</span> restaurante
-        </h1>
-        <form id="create-restaurant" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="nombre">Nombre del restaurante:</label>
-                <input type="text" id="nombre" name="nombre" required placeholder="Nombre del restaurante" />
-            </div>
+	<main>
+		<h1>
+			Crea <span class="text-gradient">tu</span> restaurante
+		</h1>
+		<form
+			id="create-restaurant"
+			method="POST"
+			enctype="multipart/form-data">
+			<div class="form-group">
+				<label for="nombre">Nombre del restaurante:</label>
+				<input
+					type="text"
+					id="nombre"
+					name="nombre"
+					required
+					placeholder="Nombre del restaurante"
+				/>
+			</div>
 
-            <div class="form-group">
-                <label for="map">Ubica tu restaurante en el mapa:</label>
-                <div id="map" class="map-container" style="height: 500px;"></div>
-            </div>
+			<div class="form-group">
+				<label for="map">Ubica tu restaurante en el mapa:</label>
+				<div
+					id="map"
+					class="map-container"
+					style="height: 500px;">
+				</div>
+			</div>
 
-            <div class="form-group">
-                <label for="descripcion">Descripcion</label>
-                <input
-                    type="text"
-                    id="descripcion"
-                    name="descripcion"
-                    placeholder="Ej: Atendemos de lunes a viernes, 9am - 6pm. Nuestro telefono es 11-nnnn-nnnn."
-                    required
-                />
-            </div>
+			<div class="form-group">
+				<label for="descripcion">Descripcion</label>
+				<input
+					type="text"
+					id="descripcion"
+					name="descripcion"
+					placeholder="Ej: Atendemos de lunes a viernes, 9am - 6pm. Nuestro telefono es 11-nnnn-nnnn."
+					required
+				/>
+			</div>
 
-            <div class="form-group">
-                <label for="carta">Publicar la carta del lugar:</label>
-                <div id="platos-container" class="platos-container">
-                    <div class="plato-item">
-                        <input type="text" name="platoNombre[]" class="plato-input" placeholder="Nombre del plato" required />
-                        <input type="number" name="platoPrecio[]" class="plato-input" placeholder="Precio" required />
-                        <button type="button" class="remove-plato-btn">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-                <button type="button" id="addPlatoBtn">Agregar otro plato</button>
-            </div>
+			<div class="form-group">
+				<label for="logo">Logo del lugar:</label>
+				<input
+					id="logoInput"
+					type="file"
+					name="logoRestaurante"
+					accept="image/*"
+					required
+				/>
+			</div>
 
-            <button type="submit" class="create-restaurante-btn">Crear restaurante</button>
-        </form>
-    </main>
+			<div class="form-group">
+				<label for="images">Imágenes del lugar:</label>
+				<input
+					id="imagesInput"
+					type="file"
+					name="imagenesRestaurante"
+					accept="image/*"
+					multiple
+					required
+				/>
+				<p
+					id="warning"
+					style="color: red; display: none;">
+					Sólo puedes subir hasta 5 imágenes.
+				</p>
+			</div>
+
+			<div class="form-group">
+				<label for="carta">Publicar la carta del lugar:</label>
+				<div
+					id="platos-container"
+					class="platos-container">
+					<div class="plato-item">
+						<input
+							type="text"
+							name="platoNombre[]"
+							class="plato-input"
+							placeholder="Nombre del plato"
+							required
+						/>
+						<input
+							type="number"
+							name="platoPrecio[]"
+							class="plato-input"
+							placeholder="Precio"
+							required
+						/>
+						<button
+							type="button"
+							class="remove-plato-btn">
+							<i class="fas fa-trash-alt"></i>
+						</button>
+					</div>
+				</div>
+				<button
+					type="button"
+					id="addPlatoBtn"
+					>Agregar otro plato</button
+				>
+			</div>
+
+			<button
+				type="submit"
+				class="create-restaurante-btn"
+				>Crear restaurante</button
+			>
+		</form>
+	</main>
 </Layout>
 
 <script>
-    import L from 'leaflet';
+	import L from 'leaflet';
 
-    // Variables
-    const form = document.getElementById('create-restaurant') as HTMLFormElement;
-    const addPlatoBtn = document.getElementById('addPlatoBtn');
-    const platosContainer = document.getElementById('platos-container');
-    let selectedLocation: L.LatLng | null = null;
-    let currentMarker: L.Marker | null = null;
-    interface Plato {
-        nombre: string;
-        precio: string;
-    }
+	// Variables
+	const form = document.getElementById('create-restaurant') as HTMLFormElement;
+	const addPlatoBtn = document.getElementById('addPlatoBtn');
+	const platosContainer = document.getElementById('platos-container');
+	const logoInput = document.getElementById('logoInput') as HTMLInputElement;
+	const fileInput = document.getElementById('imagesInput') as HTMLInputElement;
+	const warning = document.getElementById('warning') as HTMLInputElement;
+	let selectedLocation: L.LatLng | null = null;
+	let currentMarker: L.Marker | null = null;
+	interface Plato {
+		nombre: string;
+		precio: string;
+	}
 
-    // Función para agregar un nuevo plato
-    addPlatoBtn?.addEventListener('click', () => {
-        const newPlato = document.createElement('div');
-        newPlato.classList.add('plato-item');
-        newPlato.setAttribute('data-astro-cid-ardmnaja', '');
+	fileInput.addEventListener('change', () => {
+		if (fileInput.files.length > 5) {
+			warning.style.display = 'block';
+			fileInput.value = ''; // Reset the input if the limit is exceeded
+		} else {
+			warning.style.display = 'none';
+		}
+	});
 
-        newPlato.innerHTML = `
+	// Función para agregar un nuevo plato
+	addPlatoBtn?.addEventListener('click', () => {
+		const newPlato = document.createElement('div');
+		newPlato.classList.add('plato-item');
+		newPlato.setAttribute('data-astro-cid-ardmnaja', '');
+
+		newPlato.innerHTML = `
         <input type="text" name="platoNombre[]" class="plato-input" placeholder="Nombre del plato"  data-astro-cid-ardmnaja="" required />
         <input type="number" name="platoPrecio[]" class="plato-input" placeholder="Precio"  data-astro-cid-ardmnaja="" required />
         <button type="button" class="remove-plato-btn" data-astro-cid-ardmnaja="">
@@ -83,243 +167,250 @@ import '../styles/global.css';
         </button>
     `;
 
-        platosContainer?.appendChild(newPlato);
+		platosContainer?.appendChild(newPlato);
 
-        // Agregar evento para eliminar el plato
-        newPlato.querySelector('.remove-plato-btn')?.addEventListener('click', function () {
-            newPlato.remove();
-        });
-    });
+		// Agregar evento para eliminar el plato
+		newPlato.querySelector('.remove-plato-btn')?.addEventListener('click', function () {
+			newPlato.remove();
+		});
+	});
 
-    const ciudadUniversitariaCoords = [-34.541895, -58.437618] as L.LatLngExpression,
-        map = L.map('map').setView(ciudadUniversitariaCoords, 15);
+	const ciudadUniversitariaCoords = [-34.541895, -58.437618] as L.LatLngExpression,
+		map = L.map('map').setView(ciudadUniversitariaCoords, 15);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-    }).addTo(map);
+	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+	}).addTo(map);
 
-    map.on('click', function (e: L.LeafletMouseEvent) {
-        selectedLocation = e.latlng; // Guarda la latitud y longitud
+	map.on('click', function (e: L.LeafletMouseEvent) {
+		selectedLocation = e.latlng; // Guarda la latitud y longitud
 
-        // Si ya hay un marcador, eliminarlo del mapa
-        if (currentMarker) {
-            map.removeLayer(currentMarker);
-        }
+		// Si ya hay un marcador, eliminarlo del mapa
+		if (currentMarker) {
+			map.removeLayer(currentMarker);
+		}
 
-        // Crear un nuevo marcador en la ubicación seleccionada
-        currentMarker = L.marker(selectedLocation).addTo(map);
+		// Crear un nuevo marcador en la ubicación seleccionada
+		currentMarker = L.marker(selectedLocation).addTo(map);
 
-        // Asociar el popup al nuevo marcador
-        currentMarker.openPopup();
-    });
+		// Asociar el popup al nuevo marcador
+		currentMarker.openPopup();
+	});
 
-    // Manejar el envío del formulario
-    form?.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Evita el envío del formulario por defecto
+	// Manejar el envío del formulario
+	form?.addEventListener('submit', async (e) => {
+		e.preventDefault(); // Evita el envío del formulario por defecto
 
-        const nombreInput = document.getElementById('nombre') as HTMLInputElement;
-        const descripcionInput = document.getElementById('descripcion') as HTMLInputElement;
+		const nombreInput = document.getElementById('nombre') as HTMLInputElement;
+		const descripcionInput = document.getElementById('descripcion') as HTMLInputElement;
 
-        // Crear un objeto para almacenar los datos del restaurante
-        const restaurantData = {
-            nombre: nombreInput?.value,
-            latitud: String(selectedLocation?.lat),
-            longitud: String(selectedLocation?.lng),
-            descripcion: descripcionInput?.value,
-            platos: [] as Plato[],
-        };
+		// Crear un objeto FormData
+		const formData = new FormData();
 
-        // Seleccionar todos los elementos de entrada de platos
-        const platoItems = document.querySelectorAll('.plato-item');
+		// Agregar los datos del restaurante
+		formData.append('nombre', nombreInput?.value);
+		formData.append('latitud', String(selectedLocation?.lat || ''));
+		formData.append('longitud', String(selectedLocation?.lng || ''));
+		formData.append('descripcion', descripcionInput?.value);
 
-        platoItems.forEach((item) => {
-            const nombreInput = item.querySelector('input[name="platoNombre[]"]') as HTMLInputElement;
-            const precioInput = item.querySelector('input[name="platoPrecio[]"]') as HTMLInputElement;
+		// Agregar los datos de cada plato
+		// TODO: Cambiar de platos a menuItems o algo que esté más relacionado con el negocio
+		const platoItems = document.querySelectorAll('.plato-item');
+		platoItems.forEach((item, index) => {
+			const nombreInput = item.querySelector('input[name="platoNombre[]"]') as HTMLInputElement;
+			const precioInput = item.querySelector('input[name="platoPrecio[]"]') as HTMLInputElement;
 
-            const nombre = nombreInput.value;
-            const precio = precioInput.value;
+			formData.append(`platos[${index}][nombre]`, nombreInput.value);
+			formData.append(`platos[${index}][precio]`, precioInput.value);
+		});
 
-            restaurantData.platos.push({ nombre, precio });
-        });
+		// Agregar el archivo de logo (si existe)
+		if (logoInput?.files && logoInput.files.length > 0) {
+			formData.append('logo', logoInput.files[0]);
+		}
 
-        // Envía los datos al servidor
-        fetch('http://localhost:5001/crear-restaurante', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(restaurantData),
-        })
-            .then((response) => response.json())
-            .then((data) => console.log('Success:', data))
-            .catch((error) => console.error('Error:', error));
-    });
+		// Agregar los archivos de imágenes (si existen)
+		if (fileInput?.files) {
+			Array.from(fileInput.files).forEach((file, i) => {
+				formData.append(`images[${i}]`, file);
+			});
+		}
+
+		// Enviar los datos al servidor
+		fetch('http://localhost:5001/restaurantes', {
+			method: 'POST',
+			body: formData,
+		})
+			.then((response) => response.json())
+			.then((data) => console.log('Success:', data))
+			.catch((error) => console.error('Error:', error));
+	});
 </script>
 
 <style>
-    main {
-        margin: auto;
-        padding: 1rem;
-        width: 800px;
-        max-width: calc(100% - 2rem);
-        color: white;
-        font-size: 20px;
-        line-height: 1.6;
-    }
+	main {
+		margin: auto;
+		padding: 1rem;
+		width: 800px;
+		max-width: calc(100% - 2rem);
+		color: white;
+		font-size: 20px;
+		line-height: 1.6;
+	}
 
-    h1 {
-        font-size: 4rem;
-        font-weight: 700;
-        line-height: 1;
-        text-align: center;
-        margin-bottom: 1em;
-    }
+	h1 {
+		font-size: 4rem;
+		font-weight: 700;
+		line-height: 1;
+		text-align: center;
+		margin-bottom: 1em;
+	}
 
-    .text-gradient {
-        background-image: var(--accent-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 400%;
-        background-position: 0%;
-    }
+	.text-gradient {
+		background-image: var(--accent-gradient);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-size: 400%;
+		background-position: 0%;
+	}
 
-    .restaurant-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        margin-top: 2rem;
-    }
+	.restaurant-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		margin-top: 2rem;
+	}
 
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 1.5rem; /* Espacio entre cada grupo del formulario */
-    }
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 1.5rem; /* Espacio entre cada grupo del formulario */
+	}
 
-    label {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
+	label {
+		font-weight: bold;
+		margin-bottom: 0.5rem;
+	}
 
-    input[type='text'],
-    textarea {
-        padding: 0.5rem;
-        border: 1px solid rgba(var(--accent-light), 50%);
-        border-radius: 4px;
-        background-color: rgba(var(--accent-dark), 50%);
-        color: white;
-        font-size: 1em;
-    }
+	input[type='text'],
+	textarea {
+		padding: 0.5rem;
+		border: 1px solid rgba(var(--accent-light), 50%);
+		border-radius: 4px;
+		background-color: rgba(var(--accent-dark), 50%);
+		color: white;
+		font-size: 1em;
+	}
 
-    .map-container {
-        height: 500px; /* Mantener la altura que ya tenías */
-        border-radius: 15px; /* Bordes redondeados */
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra */
-        overflow: hidden; /* Para que los bordes redondeados funcionen correctamente */
-    }
+	.map-container {
+		height: 500px; /* Mantener la altura que ya tenías */
+		border-radius: 15px; /* Bordes redondeados */
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra */
+		overflow: hidden; /* Para que los bordes redondeados funcionen correctamente */
+	}
 
-    button {
-        background-color: var(--accent-light);
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-        font-size: 1em;
-        border-radius: 4px;
-        transition: background-color 0.3s;
-        margin-top: 1rem; /* Espacio adicional sobre el botón */
-    }
+	button {
+		background-color: var(--accent-light);
+		color: white;
+		padding: 10px 20px;
+		border: none;
+		cursor: pointer;
+		font-size: 1em;
+		border-radius: 4px;
+		transition: background-color 0.3s;
+		margin-top: 1rem; /* Espacio adicional sobre el botón */
+	}
 
-    button:hover {
-        background-color: rgba(var(--accent-light), 0.8);
-    }
+	button:hover {
+		background-color: rgba(var(--accent-light), 0.8);
+	}
 
-    /* Agregar platos al menú */
-    .platos-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
+	/* Agregar platos al menú */
+	.platos-container {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		width: 100%;
+	}
 
-    /* Estilos comunes para los inputs de nombre y precio */
-    .plato-input {
-        padding: 10px; /* Espaciado interno */
-        width: 100%; /* Ancho completo */
-        box-sizing: border-box; /* Incluir padding y borde en el ancho total */
-        font-size: 16px; /* Tamaño de fuente */
-        border: 1px solid #ccc; /* Borde */
-        border-radius: 4px; /* Bordes redondeados */
-        outline: none; /* Sin contorno */
-        height: 40px; /* Establecer una altura específica */
-    }
+	/* Estilos comunes para los inputs de nombre y precio */
+	.plato-input {
+		padding: 10px; /* Espaciado interno */
+		width: 100%; /* Ancho completo */
+		box-sizing: border-box; /* Incluir padding y borde en el ancho total */
+		font-size: 16px; /* Tamaño de fuente */
+		border: 1px solid #ccc; /* Borde */
+		border-radius: 4px; /* Bordes redondeados */
+		outline: none; /* Sin contorno */
+		height: 40px; /* Establecer una altura específica */
+	}
 
-    .remove-plato-btn {
-        background: none; /* Sin fondo */
-        border: none; /* Sin borde */
-        color: red; /* Color del icono */
-        font-size: 24px; /* Tamaño del icono */
-        cursor: pointer; /* Cambiar cursor al pasar sobre el botón */
-        height: 40px; /* Establecer la misma altura */
-        display: flex; /* Usar flexbox para centrar el icono */
-        align-items: center; /* Centrar verticalmente el icono */
-        margin-top: 0;
-    }
+	.remove-plato-btn {
+		background: none; /* Sin fondo */
+		border: none; /* Sin borde */
+		color: red; /* Color del icono */
+		font-size: 24px; /* Tamaño del icono */
+		cursor: pointer; /* Cambiar cursor al pasar sobre el botón */
+		height: 40px; /* Establecer la misma altura */
+		display: flex; /* Usar flexbox para centrar el icono */
+		align-items: center; /* Centrar verticalmente el icono */
+		margin-top: 0;
+	}
 
-    .plato-input:focus {
-        border-color: #007bff;
-    }
+	.plato-input:focus {
+		border-color: #007bff;
+	}
 
-    /* Eliminar las flechas de los inputs de tipo number */
-    input[type='number'] {
-        -moz-appearance: textfield;
-    }
+	/* Eliminar las flechas de los inputs de tipo number */
+	input[type='number'] {
+		-moz-appearance: textfield;
+	}
 
-    input[type='number']::-webkit-outer-spin-button,
-    input[type='number']::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
+	input[type='number']::-webkit-outer-spin-button,
+	input[type='number']::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
 
-    /* Estilos para el contenedor de cada plato */
-    .plato-item {
-        display: flex; /* Usar flexbox */
-        align-items: center; /* Alinear verticalmente los elementos */
-        gap: 10px; /* Espacio entre los elementos */
-        margin-bottom: 10px; /* Espaciado inferior entre los platos */
-        width: 100%; /* Ancho completo */
-    }
+	/* Estilos para el contenedor de cada plato */
+	.plato-item {
+		display: flex; /* Usar flexbox */
+		align-items: center; /* Alinear verticalmente los elementos */
+		gap: 10px; /* Espacio entre los elementos */
+		margin-bottom: 10px; /* Espaciado inferior entre los platos */
+		width: 100%; /* Ancho completo */
+	}
 
-    #add-plato-btn {
-        /* padding: 0.5rem; */
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
+	#add-plato-btn {
+		/* padding: 0.5rem; */
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+	}
 
-    .create-restaurante-btn {
-        background-color: var(--accent-light); /* Color de fondo */
-        color: white; /* Color del texto */
-        padding: 12px 24px; /* Espaciado interno */
-        border: none; /* Sin borde */
-        border-radius: 8px; /* Bordes redondeados */
-        font-size: 1.2em; /* Tamaño de la fuente */
-        font-weight: bold; /* Negrita para destacar el texto */
-        cursor: pointer; /* Cambiar cursor al pasar sobre el botón */
-        transition:
-            background-color 0.3s,
-            transform 0.3s; /* Transición suave */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra */
-        width: 100%;
-        margin-bottom: 20px;
-    }
+	.create-restaurante-btn {
+		background-color: var(--accent-light); /* Color de fondo */
+		color: white; /* Color del texto */
+		padding: 12px 24px; /* Espaciado interno */
+		border: none; /* Sin borde */
+		border-radius: 8px; /* Bordes redondeados */
+		font-size: 1.2em; /* Tamaño de la fuente */
+		font-weight: bold; /* Negrita para destacar el texto */
+		cursor: pointer; /* Cambiar cursor al pasar sobre el botón */
+		transition:
+			background-color 0.3s,
+			transform 0.3s; /* Transición suave */
+		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra */
+		width: 100%;
+		margin-bottom: 20px;
+	}
 
-    .create-restaurante-btn:hover {
-        background-color: rgba(var(--accent-light), 0.8); /* Color de fondo al pasar el mouse */
-        transform: translateY(-2px); /* Efecto de elevación */
-    }
+	.create-restaurante-btn:hover {
+		background-color: rgba(var(--accent-light), 0.8); /* Color de fondo al pasar el mouse */
+		transform: translateY(-2px); /* Efecto de elevación */
+	}
 
-    .create-restaurante-btn:active {
-        transform: translateY(0); /* Volver a la posición original al hacer clic */
-    }
+	.create-restaurante-btn:active {
+		transform: translateY(0); /* Volver a la posición original al hacer clic */
+	}
 </style>

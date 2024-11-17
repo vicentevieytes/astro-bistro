@@ -9,7 +9,7 @@ import { OrderStatus } from '../types/types';
 
 const url = new URL(Astro.request.url),
 	localId = url.searchParams.get('id'),
-	response = await fetch(`http://localhost:5001/local?id=${localId}`),
+	response = await fetch(`http://localhost:5001/restaurantes?id=${localId}`), // Did I break anything by changing this endpoint?
 	localData: Restaurante = await response.json();
 	// localData = data[0];
 
@@ -21,19 +21,87 @@ const url = new URL(Astro.request.url),
 	<main>
 		<Cart />
 
-		<h1>
-			Bienvenido a <span class="text-gradient">{localData.restaurant_name}</span>
-		</h1>
-		<ul role="list" class="link-card-grid">
+		<!-- Logo and Restaurant Name Section -->
+		<div class="restaurant-header">
+			<img
+				src={localData.logo}
+				alt={`${localData.restaurant_name} Logo`}
+				class="restaurant-logo"
+			/>
+			<h1>
+				Bienvenido a <span class="text-gradient">{localData.restaurant_name}</span>
+			</h1>
+		</div>
+
+		<!-- Images Section -->
+		<div class="restaurant-images">
+			{
+				[localData.image0, localData.image1, localData.image2, localData.image3, localData.image4]
+					.filter(Boolean)
+					.map((image, index) => (
+						<img
+							key={index}
+							src={image}
+							alt={`Restaurant Image ${index + 1}`}
+							class="restaurant-image"
+						/>
+					))
+			}
+		</div>
+
+		<!-- Navigation Cards -->
+		<ul
+			role="list"
+			class="link-card-grid">
 			<Card
 				href={`../menu?id=${localId}`}
 				title="Ver la carta"
 				body="Accedé a todas las opciones de platos y bebidas que tenemos disponibles."
 			/>
-			<Card href={`../pedido?id=${localId}`} title="Hacer pedido" body="Realizá tu pedido de la forma más fácil y efectiva." />
+			<Card
+				href={`../pedido?id=${localId}`}
+				title="Hacer pedido"
+				body="Realizá tu pedido de la forma más fácil y efectiva."
+			/>
 		</ul>
-		<ul role="list" class="link-card-grid">
-			<Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
+		<ul
+			role="list"
+			class="link-card-grid">
+			<Card
+				href="../"
+				title="Ir a la página principal"
+				body="Volver a VerLaCarta"
+			/>
 		</ul>
 	</main>
 </Layout>
+
+<style>
+	.restaurant-header {
+		text-align: center;
+		margin-bottom: 2rem;
+	}
+
+	.restaurant-logo {
+		width: 150px;
+		height: auto;
+		border-radius: 50%;
+		margin-bottom: 1rem;
+	}
+
+	.restaurant-images {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1rem;
+		margin-top: 2rem;
+		justify-items: center;
+	}
+
+	.restaurant-image {
+		width: 100%;
+		max-width: 400px;
+		height: auto;
+		border-radius: 8px;
+		object-fit: cover;
+	}
+</style>
