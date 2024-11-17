@@ -3,7 +3,7 @@ import Restaurant from './Restaurant.js';
 import MenuItem from './MenuItem.js';
 import OrderStatus from './OrderStatus.js';
 import Order from './Order.js';
-import OrderStatusHistory from '../../../orm_models/OrderStatusHistory.js';
+import OrderStatusHistory from '../../../unused_orm_models/OrderStatusHistory.js';
 import OrderItem from './OrderItem.js';
 
 export default function initModels(sequelize) {

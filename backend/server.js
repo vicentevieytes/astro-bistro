@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import multer from 'multer';
 import dotenv from 'dotenv';
-import { convertToJSON } from '../frontend-consumidor/src/utils/auxiliary.js';
 import NodeCache from 'node-cache';
 
 import { createServer } from 'http';
@@ -11,10 +10,11 @@ import { Server } from 'socket.io';
 
 import { Sequelize, DataTypes } from 'sequelize';
 import initModels from './infrastructure/database/models/index.js';
-import Restaurant from './infrastructure/database/models/Restaurant.js';
 import * as path from "node:path";
 import * as fs from "node:fs";
-import {setupRestaurantModule} from "./config/di.js";
+import {setupRestaurantModule} from "./config/setupRestaurantModule.js";
+import {setupMenuItemModule} from "./config/setupMenuItemModule.js";
+import {setupOrderModule} from "./config/setupOrderModule.js";
 
 dotenv.config();
 
@@ -119,8 +119,6 @@ async function fetchRestaurantsFromDB() {
         ],
     });
 
-    // console.log(restaurants);
-
     return restaurants.map((restaurant) => restaurant.get({ plain: true }));
 }
 
@@ -214,8 +212,6 @@ async function createInitialRestaurantData() {
     };
 }
 
-// TODO: Change '/comandas' to '/restaurants/:id/comandas'
-
 app.get('/orderStatuses', async (req, res) => {
     try {
         const statuses = await models.OrderStatus.findAll({
@@ -228,14 +224,18 @@ app.get('/orderStatuses', async (req, res) => {
     }
 });
 
-// NEW LOGIC COMES HERE
+// NEW LOGIC IS HERE
 
-// TODO: Try to decouple the cache logic.
-const { router: restaurantRouter } = setupRestaurantModule(models);
+const restaurantModule = setupRestaurantModule(models);
+const menuItemModule = setupMenuItemModule(models);
+const orderModule = setupOrderModule(models);
 
-app.use(restaurantRouter);
+app.use(restaurantModule.router);
+app.use(menuItemModule.router);
+app.use(orderModule.router);
 
-// NEW LOGIC COMES HERE
+
+// NEW LOGIC IS HERE
 
 // Use this endpoint in case you want to manually invalidate the cache for a specific sheet
 app.post('/invalidate-cache', (req, res) => {

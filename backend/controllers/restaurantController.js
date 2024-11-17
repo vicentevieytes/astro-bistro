@@ -48,28 +48,4 @@ export class RestaurantController {
             next(error);
         }
     }
-
-    // TODO: Maybe this should be in a different controller...
-    async getMenu(req, res, next) {
-        try {
-            const menuItems = await this.menuItemService.getMenuByRestaurantId(req.params.id);
-            res.json(menuItems);
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    async getOrders(req, res, next) {
-        try {
-            const restaurantId = req.params.id;
-
-            // Optionally verify restaurant exists first
-            await this.service.getRestaurantById(restaurantId);
-
-            const orders = await this.orderService.getRestaurantOrders(restaurantId);
-            res.json(orders);
-        } catch (error) {
-            next(error);
-        }
-    }
 }
