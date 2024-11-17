@@ -12,8 +12,8 @@ import { Server } from 'socket.io';
 import { Sequelize, DataTypes } from 'sequelize';
 import initModels from './orm_models/index.js';
 import Restaurant from './orm_models/Restaurant.js';
-import * as path from "node:path";
-import * as fs from "node:fs";
+import * as path from 'node:path';
+import * as fs from 'node:fs';
 
 dotenv.config();
 
@@ -141,7 +141,8 @@ async function initializeDatabase() {
 async function initializeOrderStatuses() {
     const existingStatuses = await models.OrderStatus.count();
 
-    if (existingStatuses === 0) { // Insert only if no statuses exist
+    if (existingStatuses === 0) {
+        // Insert only if no statuses exist
         const statusesToInsert = [
             { status_id: 1, status_name: 'Aguardando aceptación' },
             { status_id: 2, status_name: 'Aceptado' },
@@ -176,11 +177,11 @@ async function initializeInitialRestaurant() {
         await models.Restaurant.create(restaurantData);
 
         const menuItemsToInsert = [
-            { restaurant_id: 1, name: 'Café con leche', description: 'Café tradicional argentino con leche', price: 8.00 },
-            { restaurant_id: 1, name: 'Medialunas', description: 'Medialunas dulces argentinas', price: 3.50 },
-            { restaurant_id: 1, name: 'Tostado', description: 'Sándwich de jamón y queso tostado', price: 10.00 },
-            { restaurant_id: 1, name: 'Jugo de naranja', description: 'Jugo de naranja exprimido', price: 6.00 },
-            { restaurant_id: 1, name: 'Factura', description: 'Factura dulce', price: 4.00 },
+            { restaurant_id: 1, name: 'Café con leche', description: 'Café tradicional argentino con leche', price: 8.0 },
+            { restaurant_id: 1, name: 'Medialunas', description: 'Medialunas dulces argentinas', price: 3.5 },
+            { restaurant_id: 1, name: 'Tostado', description: 'Sándwich de jamón y queso tostado', price: 10.0 },
+            { restaurant_id: 1, name: 'Jugo de naranja', description: 'Jugo de naranja exprimido', price: 6.0 },
+            { restaurant_id: 1, name: 'Factura', description: 'Factura dulce', price: 4.0 },
         ];
 
         await models.MenuItem.bulkCreate(menuItemsToInsert);
@@ -229,7 +230,18 @@ app.get('/local', async (req, res) => {
         const restaurants = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
         const restaurant = restaurants.find((r) => r.restaurant_id === parseInt(id));
         if (restaurant) {
-            res.json(restaurant);
+            const formatImages = (imageBuffer) => (imageBuffer ? `data:image/jpeg;base64,${imageBuffer.toString('base64')}` : null);
+            const restaurantWithImages = {
+                ...restaurant,
+                logo: formatImages(restaurant.logo),
+                image0: formatImages(restaurant.image0),
+                image1: formatImages(restaurant.image1),
+                image2: formatImages(restaurant.image2),
+                image3: formatImages(restaurant.image3),
+                image4: formatImages(restaurant.image4),
+            };
+
+            res.json(restaurantWithImages);
         } else {
             res.status(404).json({ error: 'Restaurant not found' });
         }
@@ -388,14 +400,17 @@ io.on('connection', (socket) => {
                 }
 
                 // Create a new order
-                const order = await models.Order.create({
-                    user_id: items[0].userId, // Assuming all items have the same userId
-                    restaurant_id: items[0].restaurantId, // Assuming all items have the same restaurantId
-                    status_id: pendingStatus.status_id,
-                }, { transaction: transaction });
+                const order = await models.Order.create(
+                    {
+                        user_id: items[0].userId, // Assuming all items have the same userId
+                        restaurant_id: items[0].restaurantId, // Assuming all items have the same restaurantId
+                        status_id: pendingStatus.status_id,
+                    },
+                    { transaction: transaction },
+                );
 
                 // Prepare the order items data for bulk create
-                const orderItemsData = items.map(item => ({
+                const orderItemsData = items.map((item) => ({
                     order_id: order.order_id,
                     item_id: item.id,
                     quantity: item.quantity,
@@ -410,7 +425,7 @@ io.on('connection', (socket) => {
                 // we need to fetch them using findAll with the IDs of created order items.
                 const fullOrderItems = await models.OrderItem.findAll({
                     where: {
-                        order_item_id: orderItems.map(item => item.order_item_id)
+                        order_item_id: orderItems.map((item) => item.order_item_id),
                     },
                     include: [
                         {
@@ -453,7 +468,7 @@ io.on('connection', (socket) => {
                 //
                 // const cart = await getCartItemsByUserId(items[0].userId);
 
-                const cartItems = fullOrderItems.map(fullOrderItem => ({
+                const cartItems = fullOrderItems.map((fullOrderItem) => ({
                     id: fullOrderItem.order_id, // Or order_item_id if you prefer
                     name: fullOrderItem.MenuItem.name,
                     price: fullOrderItem.price,
@@ -470,17 +485,16 @@ io.on('connection', (socket) => {
                     id: order.order_id,
                     user: order.user_id.username || 'Jorge', // Debugging placeholder
                     status: pendingStatus.status_name,
-                    items: fullOrderItems.map(fullOrderItem => ({
+                    items: fullOrderItems.map((fullOrderItem) => ({
                         productId: fullOrderItem.item_id,
                         name: fullOrderItem.MenuItem.name,
                         quantity: fullOrderItem.quantity,
                         comments: 'Sin comentarios', // TODO: Allow users to add comments
                     })),
                     created_at: order.created_at,
-                }
+                };
 
                 io.emit('newOrderCreated', responseForComandas);
-
             } catch (error) {
                 // Rollback the transaction in case of any error
                 await transaction.rollback();
@@ -584,4 +598,3 @@ httpServer.listen(PORT, () => {
     pollForDatabaseChanges();
     initializeDatabase();
 });
-
