@@ -214,32 +214,7 @@ async function createInitialRestaurantData() {
     };
 }
 
-// TODO: I am changing from "Restaurante" to "restaurants"
-app.get('/Restaurante', async (req, res) => {
-    try {
-        const restaurantsData = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
-        res.json(restaurantsData);
-    } catch (error) {
-        console.error('Error fetching restaurants:', error);
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
-
-// TODO: I am changing from "Local" to "restaurant"
-app.get('/local', async (req, res) => {
-    const id = req.query.id;
-    try {
-        const restaurants = await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
-        const restaurant = restaurants.find((r) => r.restaurant_id === parseInt(id));
-        if (restaurant) {
-            res.json(restaurant);
-        } else {
-            res.status(404).json({ error: 'Restaurant not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data' });
-    }
-});
+// TODO: Change '/menu' to '/restaurants/:id/menu'
 
 app.get('/menu', async (req, res) => {
     const restaurantId = req.query.id;
@@ -251,6 +226,8 @@ app.get('/menu', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching data' });
     }
 });
+
+// TODO: Change '/comandas' to '/restaurants/:id/comandas'
 
 app.get('/comandas', async (req, res) => {
     const restaurantId = req.query.id;
