@@ -26,8 +26,13 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     host: process.env.DB_HOST,
     dialect: 'postgres',
     port: process.env.DB_PORT,
+    retry: {
+        match: [/ECONNREFUSED/],
+        max: 8,  // Number of retries
+        backoffBase: 1000,  // Initial backoff duration in ms
+        backoffExponent: 1.5  // Exponential backoff factor
+    }
 });
-
 // Test the connection
 try {
     await sequelize.authenticate();
@@ -40,15 +45,16 @@ try {
 
 const models = initModels(sequelize);
 sequelize.sync();
-
-// Initialize cache with no TTL because the pollig mechanism will do it for us.
-const cache = new NodeCache();
-
 app.use(
     cors({
-        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL],
+        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL, process.env.INTERNAL_CONSUMIDOR_FE_URL, process.env.INTERNAL_RESTAURANTE_FE_URL],
     }),
 );
+
+console.log(`PUBLIC_CONSUMIDOR_FE_URL: ${process.env.PUBLIC_CONSUMIDOR_FE_URL}`);
+console.log(`PUBLIC_RESTAURANTE_FE_URL: ${process.env.PUBLIC_RESTAURANTE_FE_URL}`);
+console.log(`INTERNAL_CONSUMIDOR_FE_URL: ${process.env.INTERNAL_CONSUMIDOR_FE_URL}`);
+console.log(`INTERNAL_RESTAURANTE_FE_URL: ${process.env.INTERNAL_RESTAURANTE_FE_URL}`);
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true })); // Para manejar datos de formularios
@@ -56,78 +62,10 @@ app.use(express.urlencoded({ extended: true })); // Para manejar datos de formul
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL],
+        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL, process.env.INTERNAL_CONSUMIDOR_FE_URL, process.env.INTERNAL_RESTAURANTE_FE_URL],
         methods: ['GET', 'POST'],
     },
 });
-
-async function pollForDatabaseChanges() {
-    try {
-        cache.del(CACHE_KEYS.RESTAURANTS);
-        cache.del(CACHE_KEYS.MENU_ITEMS);
-
-        await fetchDataWithCache(CACHE_KEYS.RESTAURANTS, fetchRestaurantsFromDB);
-        await fetchDataWithCache(CACHE_KEYS.MENU_ITEMS, fetchMenuItemsFromDB);
-    } catch (error) {
-        console.error(`Error polling database:`, error);
-    }
-}
-
-// Set up polling to run every minute.
-setInterval(pollForDatabaseChanges, 10000);
-
-const CACHE_KEYS = {
-    RESTAURANTS: 'restaurants',
-    MENU_ITEMS: 'menu_items',
-    ORDERS: 'orders',
-    ORDER_STATUSES: 'order_statuses',
-};
-
-async function fetchDataWithCache(cacheKey, fetchFunction) {
-    const cachedData = cache.get(cacheKey);
-    if (cachedData) {
-        console.log(`Returning cached data for ${cacheKey}`);
-        return cachedData;
-    }
-
-    try {
-        console.log(`Fetching fresh data for ${cacheKey}`);
-        const data = await fetchFunction();
-        cache.set(cacheKey, data);
-        return data;
-    } catch (error) {
-        console.error(`Error fetching data for ${cacheKey}:`, error);
-        throw error;
-    }
-}
-
-async function fetchRestaurantsFromDB() {
-    const restaurants = await models.Restaurant.findAll({
-        attributes: [
-            'restaurant_id',
-            'restaurant_name',
-            'description',
-            'latitude',
-            'longitude',
-            'logo',
-            'image0',
-            'image1',
-            'image2',
-            'image3',
-            'image4',
-            'created_at',
-        ],
-    });
-
-    // console.log(restaurants);
-
-    return restaurants.map((restaurant) => restaurant.get({ plain: true }));
-}
-
-async function fetchMenuItemsFromDB() {
-    const menuItems = await models.MenuItem.findAll();
-    return menuItems.map((item) => item.get({ plain: true }));
-}
 
 async function initializeDatabase() {
     try {
@@ -459,9 +397,9 @@ io.on('connection', (socket) => {
 });
 
 // Replace app.listen with httpServer.listen
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
-    pollForDatabaseChanges();
     initializeDatabase();
+    console.log("database data initialized");
 });
 

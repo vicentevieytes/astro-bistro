@@ -7,8 +7,8 @@
         "preview": "astro preview",
         "astro": "astro",
         "backend": "cd backend && node server.js",
-        "consumidorFE": "cd frontend-consumidor && astro dev",
-        "restauranteFE": "cd frontend-restaurante && astro dev",
+        "consumidorFE": "cd frontend-consumidor && npm run dev",
+        "restauranteFE": "cd frontend-restaurante && npm run dev",
         "install-consumidor": "cd frontend-consumidor && npm install",
         "install-restaurante": "cd frontend-restaurante && npm install"
     },
