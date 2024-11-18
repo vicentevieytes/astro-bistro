@@ -14,8 +14,9 @@ yarn-error.log*
 pnpm-debug.log*
 
 # environment variables
-.env
-.env.production
+backend/.env
+frontend-consumidor/.env
+frontend-restaurante/.env
 
 # macOS-specific files
 .DS_Store
