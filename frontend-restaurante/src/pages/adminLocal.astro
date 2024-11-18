@@ -10,7 +10,7 @@ const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la U
 let restauranteData = [];
 
 if (localId) {
-    const response = await fetch(`http://localhost:5001/restaurantes?id=${localId}`); // Did I break anything by changing this endpoint?
+    const response = await fetch(`http://localhost:5001/restaurantes/${localId}`); // Did I break anything by changing this endpoint?
     restauranteData = await response.json();
 }
 ---
