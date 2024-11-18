@@ -46,7 +46,7 @@ const cache = new NodeCache();
 
 app.use(
     cors({
-        origin: ['http://localhost:4321', 'http://localhost:4322'],
+        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL],
     }),
 );
 
@@ -56,7 +56,7 @@ app.use(express.urlencoded({ extended: true })); // Para manejar datos de formul
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:4321', 'http://localhost:4322'],
+        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL],
         methods: ['GET', 'POST'],
     },
 });
