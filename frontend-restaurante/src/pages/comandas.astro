@@ -4,20 +4,22 @@ import '../styles/global.css';
 
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+const backendUrl = import.meta.env.BACKEND_URL;
+
 
 // Hacer fetch para obtener las comandas
 let comandas = [];
-const responseComandas = await fetch(`http://localhost:5001/restaurantes/${localId}/comandas`);
+const responseComandas = await fetch(`${backendUrl}/restaurantes/${localId}/comandas`);
 comandas = await responseComandas.json();
 
 // Hacer fetch para obtener todos los estados
-const responseStates = await fetch('http://localhost:5001/orderStatuses'); // TODO: Change endpoint to: ?
+const responseStates = await fetch(`${backendUrl}/orderStatuses`); // TODO: Change endpoint to: ?
 const estados = await responseStates.json();
 ---
 
 <script>
 	import { io } from 'socket.io-client';
-	const socket = io('http://localhost:5001');
+	const socket = io(import.meta.env.PUBLIC_SOCKET_URL);
 
 	document.querySelectorAll('select[name^="estado-"]').forEach((select) => {
 		select.addEventListener('change', function (event) {

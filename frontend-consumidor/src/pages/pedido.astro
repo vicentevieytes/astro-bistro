@@ -7,6 +7,8 @@ import Cart from '../components/Cart.astro';
 
 import type { itemMenu, restaurante } from '../utils/CustomTypes';
 
+const backendUrl = import.meta.env.BACKEND_URL;
+
 const urlParams = new URLSearchParams(Astro.url.search);
 let localId = urlParams.get('id');
 
@@ -17,8 +19,8 @@ let restauranteData: restaurante = {} as restaurante;
 // TODO: Handle the case where the localId is invalid. Maybe show an error page.
 
 if (localId) {
-    const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
-        responseRestaurante = await fetch(`http://localhost:5001/restaurantes/${localId}`); // Did I break anything by changing this endpoint?
+    const response = await fetch(`${backendUrl}/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
+        responseRestaurante = await fetch(`${backendUrl}/restaurantes/${localId}`);
     restauranteData = (await responseRestaurante.json());
     menuData = await response.json();
 }
@@ -29,7 +31,7 @@ console.log(menuData)
 
 <Layout title="Hacer Pedido">
     <main>
-        <Cart />
+        <Cart/>
         <h1>
             Hacer un pedido en <span class="text-gradient" id="restaurant-name"></span>
         </h1>
@@ -64,7 +66,7 @@ console.log(menuData)
 <script>
     import { io } from "socket.io-client";
 
-        const socket = io('http://localhost:5001');
+        const socket = io(import.meta.env.PUBLIC_SOCKET_URL);
         const orderForm = document.getElementById('order-form') as HTMLFormElement;
         const dishSelect = document.getElementById('dish');
         const restaurantNameSpan = document.getElementById('restaurant-name');

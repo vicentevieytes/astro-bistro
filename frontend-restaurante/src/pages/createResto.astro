@@ -131,6 +131,7 @@ import '../styles/global.css';
 	import L from 'leaflet';
 
 	// Variables
+	const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
 	const form = document.getElementById('create-restaurant') as HTMLFormElement;
 	const addPlatoBtn = document.getElementById('addPlatoBtn');
 	const platosContainer = document.getElementById('platos-container');
@@ -237,7 +238,7 @@ import '../styles/global.css';
 		}
 
 		// Enviar los datos al servidor
-		fetch('http://localhost:5001/restaurantes', {
+	fetch(`${backendUrl}/restaurantes`, {
 			method: 'POST',
 			body: formData,
 		})
