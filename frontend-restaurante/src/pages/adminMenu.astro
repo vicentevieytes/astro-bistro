@@ -13,7 +13,7 @@ let menuData = [],
 
 if (localId) {
     const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
-        responseRestaurante = await fetch(`http://localhost:5001/restaurantes?id=${localId}`);  // Did I break anything by changing this endpoint?
+        responseRestaurante = await fetch(`http://localhost:5001/restaurantes/${localId}`);  // Did I break anything by changing this endpoint?
     restauranteData = await responseRestaurante.json();
     menuData = await response.json();
 }

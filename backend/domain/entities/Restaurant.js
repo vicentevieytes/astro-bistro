@@ -1,5 +1,7 @@
 import { MenuItem } from "./MenuItem.js";
 
+const formatImages = (imageBuffer) => (imageBuffer ? `data:image/jpeg;base64,${imageBuffer.toString('base64')}` : null);
+
 export class Restaurant {
     constructor({
                     restaurant_id,
@@ -15,15 +17,25 @@ export class Restaurant {
                     image4,
                     MenuItems = []
                 }) {
+        const formatImage = (imageBuffer) =>
+            imageBuffer ? `data:image/jpeg;base64,${imageBuffer.toString('base64')}` : null;
+
         this.id = restaurant_id;
         this.name = restaurant_name;
         this.description = description;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.logo = logo;
-        this.images = [image0, image1, image2, image3, image4].filter(img => img);
+        this.logo = formatImage(logo);
+        this.images = [
+            formatImage(image0),
+            formatImage(image1),
+            formatImage(image2),
+            formatImage(image3),
+            formatImage(image4)
+        ].filter(img => img);
         this.menuItems = MenuItems.map(item => new MenuItem(item));
     }
+
 
     toJSON() {
         return {
