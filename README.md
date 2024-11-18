@@ -2,6 +2,12 @@
 
 A web application for managing your restaurant's menu and orders
 
+# Buildear la imagen Docker
+
+```bash
+docker build -t astro-bistro
+```
+
 # Iniciar la aplicación con docker compose
 
 ```bash
