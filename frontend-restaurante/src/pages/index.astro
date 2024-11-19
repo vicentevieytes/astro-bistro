@@ -5,12 +5,12 @@ import type { Restaurante } from '../types/types';
 import '../styles/global.css';
 
 const urlParams = new URLSearchParams(Astro.url.search);
+const backendUrl = import.meta.env.BACKEND_URL
 
 let restaurantes = [];
-const responseRestaurante = await fetch(`http://localhost:5001/restaurantes`);
+const responseRestaurante = await fetch(`${backendUrl}/restaurantes`);
 restaurantes = await responseRestaurante.json();
 console.log(restaurantes);
-console.log('EEEEEE');
 ---
 
 <Layout title="VerLaCarta | Restaurantes">

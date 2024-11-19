@@ -7,6 +7,8 @@ import type { itemMenu, restaurante } from '../utils/CustomTypes';
 import Cart from '../components/Cart.astro';
 import { OrderStatus } from '../types/types';
 
+const backendUrl = import.meta.env.BACKEND_URL;
+
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
 
@@ -14,11 +16,13 @@ let menuData = [],
 	restauranteData = [];
 
 if (localId) {
-	const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`),
-		responseRestaurante = await fetch(`http://localhost:5001/restaurantes/${localId}`);
+	const response = await fetch(`${backendUrl}/restaurantes/${localId}/menu`),
+	responseRestaurante = await fetch(`${backendUrl}/restaurantes/${localId}`);
 	restauranteData = await responseRestaurante.json();
 	menuData = await response.json(); // Obtener el menú desde el backend
 }
+
+console.log(backendUrl);
 ---
 
 <Layout title="Menú del Restaurante">

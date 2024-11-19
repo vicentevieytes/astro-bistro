@@ -6,11 +6,12 @@ import '../styles/global.css';
 
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+const backendUrl = import.meta.env.BACKEND_URL;
 
 let restauranteData = [];
 
 if (localId) {
-    const response = await fetch(`http://localhost:5001/restaurantes/${localId}`); // Did I break anything by changing this endpoint?
+    const response = await fetch(`${backendUrl}/restaurantes/${localId}`); // Did I break anything by changing this endpoint?
     restauranteData = await response.json();
 }
 ---
