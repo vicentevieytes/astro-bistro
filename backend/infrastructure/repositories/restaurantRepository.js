@@ -24,7 +24,7 @@ export class RestaurantRepository {
         const restaurant = await this.models.Restaurant.findByPk(id, {
             include: [{
                 model: this.models.MenuItem,
-                attributes: ['item_id', 'name', 'description', 'price']
+                attributes: ['item_id', 'restaurant_id', 'name', 'description', 'price']
             }]
         });
 

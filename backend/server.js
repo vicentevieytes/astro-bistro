@@ -350,21 +350,21 @@ io.on('connection', (socket) => {
 
                     io.emit('cartUpdated', cartItems); // Emit the array of cart items
 
-                    // TODO: THIS IS NOT USED YET: Emit something to update the comanda too.
-                    const responseForComandas = {
-                        id: order.order_id,
-                        user: order.user_id.username || 'Jorge', // Debugging placeholder
-                        status: pendingStatus.status_name,
-                        items: fullOrderItems.map(fullOrderItem => ({
-                            productId: fullOrderItem.item_id,
-                            name: fullOrderItem.MenuItem.name,
-                            quantity: fullOrderItem.quantity,
-                            comments: 'Sin comentarios', // TODO: Allow users to add comments
-                        })),
-                        created_at: order.created_at,
-                    }
-
-                    io.emit('newOrderCreated', responseForComandas);
+                    // // TODO: THIS IS NOT USED YET: Emit something to update the comanda too.
+                    // const responseForComandas = {
+                    //     id: order.order_id,
+                    //     user: order.user_id.username || 'Jorge', // Debugging placeholder
+                    //     status: pendingStatus.status_name,
+                    //     items: fullOrderItems.map(fullOrderItem => ({
+                    //         productId: fullOrderItem.item_id,
+                    //         name: fullOrderItem.MenuItem.name,
+                    //         quantity: fullOrderItem.quantity,
+                    //         comments: 'Sin comentarios', // TODO: Allow users to add comments
+                    //     })),
+                    //     created_at: order.created_at,
+                    // }
+                    //
+                    // io.emit('newOrderCreated', responseForComandas);
 
                 } catch (error) {
                     // Rollback the transaction in case of any error
