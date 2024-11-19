@@ -80,12 +80,13 @@ console.log(menuData)
     async function updatePageContent() {
         const urlParams = new URLSearchParams(window.location.search);
         const localId = urlParams.get('id');
+        const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
 
         if (localId) {
             try {
-                const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`);
+                const response = await fetch(`${backendUrl}/restaurantes/${localId}/menu`);
                 const menuData = await response.json();
-                const restaurantResponse = await fetch(`http://localhost:5001/restaurantes/${localId}`);
+                const restaurantResponse = await fetch(`${backendUrl}/restaurantes/${localId}`);
                 const restaurantData = await restaurantResponse.json();
 
                 // Update restaurant name
