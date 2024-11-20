@@ -69,6 +69,7 @@ console.log(groupedItems);
     });
 
     socket.on('cartFetched', (items) => {
+        console.log(items);
         cartItems = items;
 
         renderCart();

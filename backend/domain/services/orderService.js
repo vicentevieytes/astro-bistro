@@ -20,12 +20,15 @@ export class OrderService {
             throw new Error('Invalid status');
         }
 
-        const updatedOrder = await this.repository.updateStatus(orderId, statusId);
+        // const orderWithUpdatedStatus = await this.repository.updateStatus(orderId, statusId);
 
-        console.log(updatedOrder);
+        // console.log(updatedOrder);
+        // console.log("A");
 
-        return new OrderWithUpdatedStatusDTO(updatedOrder.orderId, updatedOrder.status);
+        return await this.repository.updateStatus(orderId, statusId);
     }
 
-
+    async getOrdersByUsedId(userId) {
+        return await this.repository.findOrderItemsByUserId(userId);
+    }
 }

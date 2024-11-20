@@ -1,6 +1,6 @@
 export class OrderWithUpdatedStatusDTO {
-    constructor(orderId, newStatusName) {
-        this.orderId = orderId;
-        this.newStatus = newStatusName;
+    constructor(order_id, status_name) {
+        this.orderId = order_id;
+        this.newStatus = status_name;
     }
 }

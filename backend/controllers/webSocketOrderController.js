@@ -33,7 +33,25 @@ export class webSocketOrderController {
             io.emit('orderStatusUpdated', updatedOrder);
         } catch (error) {
             console.error('Error in handleUpdateOrderStatus:', error);
-            socket.emit('error', 'Failed to update order status');
+            // socket.emit('error', 'Failed to update order status');
+        }
+    }
+
+    // TODO: Change everything that says "Cart" to "Orders"
+    async fetchCart(socket, userId) {
+        try {
+            const cart = await this.service.getOrdersByUsedId(userId);
+            // Let's send the json:
+            console.log("BEFORE:", cart);
+            // const cartJson = JSON.stringify(cart);
+            // console.log('cart:', cartJson);
+            console.log("EPA")
+
+            socket.emit('cartFetched', cart);
+
+        } catch (error) {
+            console.error('Error in handleFetchCart:', error);
+            // socket.emit('error', 'Failed to fetch cart');
         }
     }
 }

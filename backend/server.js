@@ -88,12 +88,12 @@ const CACHE_KEYS = {
 async function fetchDataWithCache(cacheKey, fetchFunction) {
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
-        console.log(`Returning cached data for ${cacheKey}`);
+        // console.log(`Returning cached data for ${cacheKey}`);
         return cachedData;
     }
 
     try {
-        console.log(`Fetching fresh data for ${cacheKey}`);
+        // console.log(`Fetching fresh data for ${cacheKey}`);
         const data = await fetchFunction();
         cache.set(cacheKey, data);
         return data;
@@ -339,7 +339,7 @@ io.on('connection', (socket) => {
                     await transaction.commit();
 
                     const cartItems = fullOrderItems.map(fullOrderItem => ({
-                        id: fullOrderItem.order_id, // Or order_item_id if you prefer
+                        id: fullOrderItem.order_id,
                         name: fullOrderItem.MenuItem.name,
                         price: fullOrderItem.price,
                         quantity: fullOrderItem.quantity,
@@ -377,90 +377,13 @@ io.on('connection', (socket) => {
             }
         });
 
-    socket.on('fetchCart', async (userId) => {
-        try {
-            const orders = await models.Order.findAll({
-                where: {
-                    user_id: userId,
-                },
-                include: [
-                    {
-                        model: models.OrderItem,
-                        include: [
-                            {
-                                model: models.MenuItem,
-                                attributes: ['name', 'description'],
-                            },
-                        ],
-                    },
-                    {
-                        model: models.Restaurant,
-                        attributes: ['restaurant_id', 'restaurant_name'],
-                    },
-                    {
-                        model: models.OrderStatus,
-                        attributes: ['status_name'],
-                    },
-                ],
-            });
-
-            let cartItems = [];
-
-            // TODO: Transform this data somewhere else.
-            orders.forEach((order) => {
-                const orderItems = order.OrderItems.map((item) => ({
-                    id: item.order_id, // TODO: Maybe send the order_item_id too...
-                    name: item.MenuItem.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                    status: order.OrderStatus.status_name,
-                    restaurantId: order.Restaurant.restaurant_id,
-                    restaurantName: order.Restaurant.restaurant_name,
-                }));
-                cartItems = cartItems.concat(orderItems);
-            });
-
-            socket.emit('cartFetched', cartItems);
-        } catch (error) {
-            console.error('Error fetching cart:', error);
-            socket.emit('error', 'Failed to fetch cart');
-        }
-    });
+    // TODO: Change to fetchOrders.
+    socket.on('fetchCart', (userId) =>
+        webSocketModule.controller.fetchCart(socket, userId));
 
     socket.on('updateOrderStatus', (data) =>
         webSocketModule.controller.updateOrderStatus(socket, io, data));
 
-
-    // socket.on('updateOrderStatus', async ({ orderId, newStatusId }) => {
-    //     try {
-    //         const order = await models.Order.findByPk(orderId, {
-    //             include: [{ model: models.OrderStatus }],
-    //         });
-    //         if (!order) {
-    //             throw new Error('Order not found');
-    //         }
-    //
-    //         const newStatus = await models.OrderStatus.findByPk(newStatusId);
-    //         if (!newStatus) {
-    //             throw new Error('Invalid status');
-    //         }
-    //
-    //         order.status_id = newStatusId;
-    //         await order.save();
-    //
-    //         console.log('Order status updated successfully');
-    //
-    //         console.log(orderId);
-    //
-    //         io.emit('orderStatusUpdated', {
-    //             orderId,
-    //             newStatus: newStatus.status_name,
-    //         });
-    //     } catch (error) {
-    //         console.error('Error updating order status:', error);
-    //         socket.emit('error', 'Failed to update order status');
-    //     }
-    // });
 
     socket.on('disconnect', () => {
         console.log('User disconnected.');

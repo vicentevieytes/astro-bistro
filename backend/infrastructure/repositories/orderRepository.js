@@ -1,6 +1,8 @@
 import {Order} from "../../domain/entities/Order.js";
-import {OrderDTO} from "../../domain/dtos/order/orderDTO.js";
+// import {OrderDTO} from "../../domain/dtos/order/orderDTO.js";
 import {OrderStatus} from "../../domain/entities/OrderStatus.js";
+import {OrderItemDTO} from "../../domain/dtos/order/orderItemDTO.js";
+import {OrderWithUpdatedStatusDTO} from "../../domain/dtos/order/orderWithUpdatedStatusDTO.js";
 
 export class OrderRepository {
     constructor(models) {
@@ -35,20 +37,78 @@ export class OrderRepository {
         return orders.map(order => new Order(order.get({ plain: true })));
     }
 
-    async findById(orderId) {
+    async findOrderItemsById(orderId) {
         const order = await this.models.Order.findByPk(orderId, {
             include: [
                 {
                     model: this.models.OrderItem,
                     include: [{ model: this.models.MenuItem }],
                 },
+                { model: this.models.Restaurant },
+                { model: this.models.OrderStatus },
+                // { model: this.models.User },
+            ],
+        });
+
+        const fullOrderData = order.get({ plain: true });
+
+        return fullOrderData.OrderItems.map(orderItem => {
+            const dtoData = {
+                id: orderItem.order_id,
+                name: orderItem.MenuItem?.name,
+                price: orderItem.price,
+                quantity: orderItem.quantity,
+                status: fullOrderData.OrderStatus?.status_name,
+                restaurantId: fullOrderData.Restaurant?.restaurant_id,
+                restaurantName: fullOrderData.Restaurant?.restaurant_name,
+            };
+            return new OrderItemDTO(dtoData);
+        });
+    }
+
+    async findOrderItemsByUserId(userId) {
+        const orders = await this.models.Order.findAll({
+            where: { user_id: userId },
+            include: [
+                {
+                    model: this.models.OrderItem,
+                    include: [{ model: this.models.MenuItem }],
+                },
+                { model: this.models.Restaurant },
+                { model: this.models.OrderStatus },
+                // { model: this.models.User },
+            ],
+            order: [['created_at', 'DESC']],
+        });
+
+        return orders.flatMap(order => {
+            const fullOrderData = order.get({ plain: true });
+            return fullOrderData.OrderItems.map(orderItem => new OrderItemDTO({
+                id: orderItem.order_id,
+                name: orderItem.MenuItem?.name,
+                price: orderItem.price,
+                quantity: orderItem.quantity,
+                status: fullOrderData.OrderStatus?.status_name,
+                restaurantId: fullOrderData.Restaurant?.restaurant_id,
+                restaurantName: fullOrderData.Restaurant?.restaurant_name,
+            }));
+        });
+    }
+
+async findById(orderId) {
+        const order = await this.models.Order.findByPk(orderId, {
+            include: [
+                {
+                    model: this.models.OrderItem,
+                    include: [{ model: this.models.MenuItem }],
+                },
+                { model: this.models.Restaurant },
                 { model: this.models.OrderStatus },
                 { model: this.models.User },
             ],
         });
 
-        // TODO: Think of a better name for "OrderDTO"
-        return order ? new OrderDTO(order.get({ plain: true })) : null;
+        return order ? new Order(order.get({ plain: true })) : null;
     }
 
     async updateStatus(orderId, statusId) {
@@ -56,7 +116,11 @@ export class OrderRepository {
             { status_id: statusId },
             { where: { order_id: orderId } }
         );
-        return this.findById(orderId);
+        const order = await this.findById(orderId);
+
+        console.log(order);
+
+        return order ? new OrderWithUpdatedStatusDTO(order.id, order.status.statusName) : null;
     }
 
     async findStatusById(statusId) {
@@ -66,4 +130,6 @@ export class OrderRepository {
         console.log(status);
         return status ? new OrderStatus(status.get({ plain: true })) : null;
     }
+
+
 }

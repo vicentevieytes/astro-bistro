@@ -28,18 +28,18 @@ export class RestaurantRepository {
             }]
         });
 
-        console.log(restaurant.MenuItems[0]);
+        // console.log(restaurant.MenuItems[0]);
 
         const restaurantData = restaurant.get({ plain: true });
-        console.log(restaurantData);
+        // console.log(restaurantData);
 
-        console.log("LALAL")
+        // console.log("LALAL")
 
         const restaurantObj = new Restaurant(restaurantData);
 
-        console.log(restaurantObj)
+        // console.log(restaurantObj)
 
-        console.log("LELELEL")
+        // console.log("LELELEL")
 
 
         return restaurant ? new Restaurant(restaurant.get({ plain: true })) : null;
