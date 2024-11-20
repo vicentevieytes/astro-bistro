@@ -31,4 +31,26 @@ export class OrderService {
     async getOrdersByUsedId(userId) {
         return await this.repository.findOrderItemsByUserId(userId);
     }
+
+    async createOrder(createOrderDTO) {
+        try {
+            const pendingStatus = await this.repository.findPendingStatus();
+            if (!pendingStatus) {
+                throw new Error('Pending status not found');
+            }
+
+            const order = await this.repository.createOrder({
+                userId: createOrderDTO.userId,
+                restaurantId: createOrderDTO.restaurantId,
+                statusId: pendingStatus.id,
+                items: createOrderDTO.items
+            });
+
+            return await this.repository.findOrderItemsById(order.order_id);
+        } catch (error) {
+            console.error('Error in createOrder service:', error);
+            throw error;
+        }
+    }
+
 }

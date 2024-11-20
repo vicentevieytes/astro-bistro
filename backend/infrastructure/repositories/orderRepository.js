@@ -95,7 +95,7 @@ export class OrderRepository {
         });
     }
 
-async findById(orderId) {
+    async findById(orderId) {
         const order = await this.models.Order.findByPk(orderId, {
             include: [
                 {
@@ -131,5 +131,38 @@ async findById(orderId) {
         return status ? new OrderStatus(status.get({ plain: true })) : null;
     }
 
+    async findPendingStatus() {
+        const status = await this.models.OrderStatus.findOne({
+            where: { status_name: 'Aguardando aceptación' }
+        });
+        return status ? new OrderStatus(status.get({ plain: true })) : null;
+    }
+
+    async createOrder(orderData) {
+        const transaction = await this.models.sequelize.transaction();
+
+        try {
+            const order = await this.models.Order.create({
+                user_id: orderData.userId,
+                restaurant_id: orderData.restaurantId,
+                status_id: orderData.statusId
+            }, { transaction });
+
+            const orderItemsData = orderData.items.map(item => ({
+                order_id: order.order_id,
+                item_id: item.id,
+                quantity: item.quantity,
+                price: item.price
+            }));
+
+            await this.models.OrderItem.bulkCreate(orderItemsData, { transaction });
+
+            await transaction.commit();
+            return order;
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    }
 
 }

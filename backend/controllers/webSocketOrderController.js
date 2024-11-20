@@ -1,28 +1,9 @@
+import {CreateOrderDTO} from "../domain/dtos/order/createOrderDTO.js";
+
 export class webSocketOrderController {
     constructor(orderService) {
         this.service = orderService;
     }
-
-    // async handleAddOrder(socket, io, orderData) {
-    //     try {
-    //         const createOrderDTO = new CreateOrderDTO(orderData);
-    //         const order = await this.service.createOrder(createOrderDTO);
-    //         io.emit('newOrder', order);
-    //     } catch (error) {
-    //         console.error('Error in handleAddOrder:', error);
-    //         socket.emit('error', 'Failed to create order');
-    //     }
-    // }
-    //
-    // async handleFetchOrders(socket, restaurantId) {
-    //     try {
-    //         const orders = await this.service.getOrdersByRestaurant(restaurantId);
-    //         socket.emit('ordersFetched', orders);
-    //     } catch (error) {
-    //         console.error('Error in handleFetchOrders:', error);
-    //         socket.emit('error', 'Failed to fetch orders');
-    //     }
-    // }
 
     // TODO: Decide if we need socket.emit or io.emit...
 
@@ -54,4 +35,28 @@ export class webSocketOrderController {
             // socket.emit('error', 'Failed to fetch cart');
         }
     }
+
+    async addToCart(socket, io, items) {
+        try {
+            if (!Array.isArray(items) || items.length === 0) {
+                throw new Error('Invalid or empty items list');
+            }
+
+            const createOrderDTO = new CreateOrderDTO({
+                userId: items[0].userId,
+                restaurantId: items[0].restaurantId,
+                items: items
+            });
+
+            const updatedCart = await this.service.createOrder(createOrderDTO);
+
+            console.log('updatedCart:', updatedCart);
+
+            io.emit('cartUpdated', updatedCart);
+        } catch (error) {
+            console.error('Error in addToCart:', error);
+            socket.emit('error', 'Failed to add items to cart');
+        }
+    }
+
 }
