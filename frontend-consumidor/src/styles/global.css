@@ -55,3 +55,24 @@ h1 {
     gap: 2rem;
     padding: 0;
 }
+
+.submit-button {
+    background: linear-gradient(90deg, #3a7d44, #2a6d34);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.submit-button:hover {
+    background: linear-gradient(90deg, #2a6d34, #3a7d44);
+    transform: scale(1.05);
+}
+
+.submit-button:active {
+    transform: scale(0.95);
+}

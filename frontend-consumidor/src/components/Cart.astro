@@ -12,7 +12,7 @@ interface Props {
 }
 
 
-const { initialItems = []} = Astro.props;
+const { initialItems = [] } = Astro.props;
 
 // Group items by restaurant
 const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
@@ -57,13 +57,9 @@ console.log(groupedItems);
 <script>
     import { io } from "socket.io-client";
 
-    // Get the socket URL from the data attribute
-    const cartDiv = document.getElementById('order-cart');
-    const socketUrl = import.meta.env.PUBLIC_SOCKET_URL;
-    // Connect to the socket
-    const socket = io(socketUrl);
-
+    const socket = io('http://localhost:5001');
     let cartItems = [];
+    const cartDiv = document.getElementById('order-cart');
 
     // Fetch cart items when the component mounts
     document.addEventListener('DOMContentLoaded', () => {
@@ -108,48 +104,121 @@ console.log(groupedItems);
         console.log("We are rendering")
         if (cartDiv) {
             console.log("Rendering cart with items:", cartItems);
+
+            let cartHTML = `
+        <div class="localesCercanos">
+            <h2 style="margin: 0 0 1rem 0; color: white;">Tus pedidos</h2>
+            <div style="
+                display: grid; 
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
+            ">
+    `;
+
+            // Group items by their id
             const groupedItems = cartItems.reduce((acc, item) => {
-                if (!acc[item.restaurantId]) {
-                    acc[item.restaurantId] = {
-                        name: item.restaurantName,
-                        items: []
+                if (!acc[item.id]) {
+                    acc[item.id] = {
+                        restaurantName: item.restaurantName,
+                        items: [],
+                        totalQuantity: 0,
+                        totalPrice: 0,
+                        status: item.status
                     };
                 }
-                acc[item.restaurantId].items.push(item);
+                acc[item.id].items.push(item);
+                acc[item.id].totalQuantity += item.quantity;
+                acc[item.id].totalPrice += item.price * item.quantity;
                 return acc;
             }, {});
 
-            let cartHTML = '<h2>Your Orders</h2>';
-            let grandTotal = 0;
+            // Status color mapping
+            const statusColors = {
+                'Aceptado': '#28a745', // Green
+                'Aguardando aceptación': '#ffc107', // Yellow
+                'Listo para ser retirado': '#20c997', // Teal
+                'default': '#6c757d', // Gray
+                'Rechazado': '#dc3545', // Red
+                'En preparación': '#28a745' // Green
+            };
 
-            Object.entries(groupedItems).forEach(([restaurantId, restaurant]) => {
+            // Render each order
+            Object.entries(groupedItems).forEach(([orderId, orderGroup]) => {
+                const firstItem = orderGroup.items[0];
+                const statusColor = statusColors[orderGroup.status] || statusColors['default'];
+
                 cartHTML += `
-                    <div class="restaurant-order">
-                        <h3>${restaurant.name}</h3>
-                        <ul class="cart-items">
-                `;
-
-                let restaurantTotal = 0;
-                restaurant.items.forEach(item => {
-                    cartHTML += `
-                        <li>
-                            ${item.name} - Quantity: ${item.quantity} - Status: ${item.status}
-                            ${item.orderId ? ` (Order #${item.orderId})` : ''}
+            <div style="
+                background: rgba(255,255,255,0.1);
+                border-radius: 8px;
+                padding: 0.75rem;
+                color: white;
+                display: flex;
+                flex-direction: column;
+                min-height: auto;
+                max-height: 250px;
+                height: fit-content;
+                overflow: hidden;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="margin: 0; font-size: 1rem;">Pedido #${orderId}</h3>
+                    <span style="
+                        background-color: ${statusColor};
+                        color: white;
+                        padding: 0.2rem 0.4rem;
+                        border-radius: 4px;
+                        font-size: 0.7rem;
+                    ">
+                        ${orderGroup.status}
+                    </span>
+                </div>
+                <p style="
+                    margin: 0.25rem 0 0.5rem 0; 
+                    color: rgba(255,255,255,0.7);
+                    font-size: 0.8rem;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                ">${orderGroup.restaurantName}</p>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                    <span>${orderGroup.totalQuantity} unid.</span>
+                    <span>Total: $${orderGroup.totalPrice.toFixed(2)}</span>
+                </div>
+                <ul style="
+                    list-style-type: none;
+                    padding: 0;
+                    margin: 0;
+                    border-top: 1px solid rgba(255,255,255,0.2);
+                    padding-top: 0.5rem;
+                    overflow-y: auto;
+                    max-height: 150px;
+                ">
+                    ${orderGroup.items.map(item => `
+                        <li style="
+                            display: flex; 
+                            justify-content: space-between;
+                            margin-bottom: 0.25rem;
+                            color: rgba(255,255,255,0.9);
+                            font-size: 0.8rem;
+                        ">
+                            <span style="
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                max-width: 60%;
+                            ">${item.name}</span>
+                            <span>Cant: ${item.quantity}</span>
                         </li>
-                    `;
-                    restaurantTotal += item.price * item.quantity;
-                });
-
-                cartHTML += `
-                        </ul>
-                        <p>Restaurant Total: $<span class="restaurant-total">${restaurantTotal.toFixed(2)}</span></p>
-                    </div>
-                `;
-
-                grandTotal += restaurantTotal;
+                    `).join('')}
+                </ul>
+            </div>
+        `;
             });
 
-            cartHTML += `<p>Grand Total: $<span id="cart-total">${grandTotal.toFixed(2)}</span></p>`;
+            cartHTML += `
+            </div>
+        </div>
+    `;
 
             cartDiv.innerHTML = cartHTML;
         }
