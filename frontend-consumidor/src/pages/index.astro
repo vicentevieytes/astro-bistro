@@ -10,8 +10,7 @@ const localesResponse = await fetch(`${publicBackendUrl}/restaurantes`);
 const restaurants = (await localesResponse.json()) as restaurante[];
 
 const urlParams = new URLSearchParams(Astro.url.search);
-let userId = urlParams.get('userId');
-
+let userId = urlParams.get('userId') ?? '1';
 ---
 
 <Layout title="VerLaCarta | Consumidor">
