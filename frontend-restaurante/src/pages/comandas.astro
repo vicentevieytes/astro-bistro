@@ -13,6 +13,9 @@ comandas = await responseComandas.json();
 // Hacer fetch para obtener todos los estados
 const responseStates = await fetch('http://localhost:5001/orderStatuses'); // TODO: Change endpoint to: ?
 const estados = await responseStates.json();
+console.log("A")
+console.log(estados);
+
 ---
 
 <script>
@@ -84,9 +87,9 @@ const estados = await responseStates.json();
 							name={`estado-${comanda.id}`}>
 							{estados.map((estado) => (
 								<option
-									value={estado.status_id}
-									selected={estado.status_name === comanda.status}>
-									{estado.status_name}
+									value={estado.id}
+									selected={estado.statusName === comanda.status}>
+									{estado.statusName}
 								</option>
 							))}
 						</select>

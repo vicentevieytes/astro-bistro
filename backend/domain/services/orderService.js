@@ -53,4 +53,8 @@ export class OrderService {
         }
     }
 
+    async getOrderStatuses() {
+        return await this.repository.findOrderStatuses();
+    }
+
 }

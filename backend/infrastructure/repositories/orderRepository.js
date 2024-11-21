@@ -165,4 +165,13 @@ export class OrderRepository {
         }
     }
 
+    async findOrderStatuses() {
+        const statuses = await this.models.OrderStatus.findAll({
+            attributes: ['status_id', 'status_name'],
+        });
+        console.log(statuses);
+        console.log("B")
+        return statuses.map(status => new OrderStatus(status.get({ plain: true })))
+    }
+
 }

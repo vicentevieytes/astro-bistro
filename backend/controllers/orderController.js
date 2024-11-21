@@ -14,5 +14,15 @@ export class OrderController {
         }
     }
 
+    async getOrderStatuses(req, res, next) {
+        try {
+            const statuses = await this.service.getOrderStatuses();
+            console.log(statuses);
+            res.json(statuses);
+        } catch (error) {
+            next(error);
+        }
+    }
+
 
 }

@@ -5,5 +5,7 @@ export function createOrderRouter(orderController) {
 
     router.get("/restaurantes/:id/comandas", orderController.getOrders.bind(orderController));
 
+    router.get("/orderStatuses", orderController.getOrderStatuses.bind(orderController));
+
     return router;
 }

@@ -55,18 +55,6 @@ const io = new Server(httpServer, {
     },
 });
 
-app.get('/orderStatuses', async (req, res) => {
-    try {
-        const statuses = await models.OrderStatus.findAll({
-            attributes: ['status_id', 'status_name'],
-        });
-        res.json(statuses);
-    } catch (error) {
-        console.error('Error fetching order statuses:', error);
-        res.status(500).json({ error: 'An error occurred while fetching order statuses' });
-    }
-});
-
 const restaurantModule = setupRestaurantModule(models);
 const menuItemModule = setupMenuItemModule(models);
 const orderModule = setupOrderModule(models);
