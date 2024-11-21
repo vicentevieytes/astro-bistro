@@ -7,8 +7,6 @@ import Cart from '../components/Cart.astro';
 
 import type { itemMenu, restaurante } from '../utils/CustomTypes';
 
-const backendUrl = import.meta.env.BACKEND_URL;
-
 const urlParams = new URLSearchParams(Astro.url.search);
 let localId = urlParams.get('id');
 
@@ -19,8 +17,8 @@ let restauranteData: restaurante = {} as restaurante;
 // TODO: Handle the case where the localId is invalid. Maybe show an error page.
 
 if (localId) {
-    const response = await fetch(`${backendUrl}/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
-        responseRestaurante = await fetch(`${backendUrl}/restaurantes/${localId}`);
+    const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
+        responseRestaurante = await fetch(`http://localhost:5001/restaurantes/${localId}`); // Did I break anything by changing this endpoint?
     restauranteData = (await responseRestaurante.json());
     menuData = await response.json();
 }
@@ -31,7 +29,7 @@ console.log(menuData)
 
 <Layout title="Hacer Pedido">
     <main>
-        <Cart/>
+        <Cart />
         <h1>
             Hacer un pedido en <span class="text-gradient" id="restaurant-name"></span>
         </h1>
@@ -66,27 +64,26 @@ console.log(menuData)
 <script>
     import { io } from "socket.io-client";
 
-        const socket = io(import.meta.env.PUBLIC_SOCKET_URL);
-        const orderForm = document.getElementById('order-form') as HTMLFormElement;
-        const dishSelect = document.getElementById('dish');
-        const restaurantNameSpan = document.getElementById('restaurant-name');
-        const addToSummaryButton = document.getElementById('add-to-summary'); // New button
-        const submitOrderButton = document.getElementById('submit-order'); // New button
-        const summaryList = document.getElementById('summary-list');
-        const totalPriceSpan = document.getElementById('total-price');
+    const socket = io('http://localhost:5001');
+    const orderForm = document.getElementById('order-form') as HTMLFormElement;
+    const dishSelect = document.getElementById('dish');
+    const restaurantNameSpan = document.getElementById('restaurant-name');
+    const addToSummaryButton = document.getElementById('add-to-summary'); // New button
+    const submitOrderButton = document.getElementById('submit-order'); // New button
+    const summaryList = document.getElementById('summary-list');
+    const totalPriceSpan = document.getElementById('total-price');
 
-        let orderSummary = []; // Array to store items in the order summary
+    let orderSummary = []; // Array to store items in the order summary
 
     async function updatePageContent() {
         const urlParams = new URLSearchParams(window.location.search);
         const localId = urlParams.get('id');
-        const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
 
         if (localId) {
             try {
-                const response = await fetch(`${backendUrl}/restaurantes/${localId}/menu`);
+                const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`);
                 const menuData = await response.json();
-                const restaurantResponse = await fetch(`${backendUrl}/restaurantes/${localId}`);
+                const restaurantResponse = await fetch(`http://localhost:5001/restaurantes/${localId}`);
                 const restaurantData = await restaurantResponse.json();
 
                 // Update restaurant name
@@ -110,61 +107,74 @@ console.log(menuData)
         }
     }
 
-        updatePageContent();
-        window.addEventListener('popstate', updatePageContent);
+    updatePageContent();
+    window.addEventListener('popstate', updatePageContent);
 
-        // Function to update the displayed order summary and total price
-        function updateOrderSummaryDisplay() {
-            summaryList.innerHTML = ''; // Clear the current list
-            let totalPrice = 0;
+    // Function to update the displayed order summary and total price
+    function updateOrderSummaryDisplay() {
+        summaryList.innerHTML = ''; // Clear the current list
+        let totalPrice = 0;
 
-            orderSummary.forEach(item => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${item.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
-                summaryList.appendChild(listItem);
-                totalPrice += item.price * item.quantity;
-                });
+        orderSummary.forEach((item, index) => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `${item.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)} <button class="delete-button" data-index="${index}">Eliminar</button>`;
+            summaryList.appendChild(listItem);
+            totalPrice += item.price * item.quantity;
+        });
 
-            totalPriceSpan.textContent = totalPrice.toFixed(2);
-            }
+        totalPriceSpan.textContent = totalPrice.toFixed(2);
 
-        addToSummaryButton?.addEventListener('click', () => {
-            const quantityInput = document.getElementById('quantity');
-            const dishId = dishSelect.value;
-            const quantity = parseInt(quantityInput.value);
-            const selectedDish = dishSelect.options[dishSelect.selectedIndex];
-
-            if (selectedDish) {
-                const dishName = selectedDish.textContent?.split(' - ')[0] || '';
-                const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
-                const localId = orderForm.dataset.localId;
-                const userId = 1; // Hardcoded for now
-
-                const newItem = {
-                    id: dishId,
-                    userId: userId,
-                    name: dishName,
-                    price: dishPrice,
-                    quantity: quantity,
-                    restaurantId: localId,
-                    };
-
-                orderSummary.push(newItem); // Add the item to the order summary
+        // Add event listeners to delete buttons
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const index = event.target.dataset.index;
+                orderSummary.splice(index, 1); // Remove the item from the order summary
                 updateOrderSummaryDisplay(); // Update the display
-                }
-
-            orderForm.reset();
             });
+        });
+    }
 
-        submitOrderButton?.addEventListener('click', () => {
-            if (orderSummary.length > 0) {
-                socket.emit('addOrder', orderSummary); // Emit the entire order summary
-                orderSummary = []; // Clear the order summary after submission
-                updateOrderSummaryDisplay(); // Update the display to clear the list
-                }
-            });
+    addToSummaryButton?.addEventListener('click', () => {
+        const quantityInput = document.getElementById('quantity');
+        const dishId = dishSelect.value;
+        const quantity = parseInt(quantityInput.value);
+        const selectedDish = dishSelect.options[dishSelect.selectedIndex];
+
+        if (!dishId || isNaN(quantity) || quantity <= 0) {
+            alert('Por favor, selecciona un plato y especifica una cantidad válida.');
+            return;
+        }
+
+        if (selectedDish) {
+            const dishName = selectedDish.textContent?.split(' - ')[0] || '';
+            const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
+            const localId = orderForm.dataset.localId;
+            const userId = 1; // Hardcoded for now
+
+            const newItem = {
+                id: dishId,
+                userId: userId,
+                name: dishName,
+                price: dishPrice,
+                quantity: quantity,
+                restaurantId: localId,
+            };
+
+            orderSummary.push(newItem); // Add the item to the order summary
+            updateOrderSummaryDisplay(); // Update the display
+        }
+
+        orderForm.reset();
+    });
+
+    submitOrderButton?.addEventListener('click', () => {
+        if (orderSummary.length > 0) {
+            socket.emit('addOrder', orderSummary); // Emit the entire order summary
+            orderSummary = []; // Clear the order summary after submission
+            updateOrderSummaryDisplay(); // Update the display to clear the list
+        }
+    });
 </script>
-
 
 <style>
     .form-card {
@@ -212,10 +222,11 @@ console.log(menuData)
         padding: 10px;
         border-radius: 5px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: background-color 0.3s, transform 0.3s;
     }
 
     .submit-button:hover {
         background-color: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05); /* Slightly increase the size */
     }
 </style>
