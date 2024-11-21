@@ -12,6 +12,7 @@ import {setupRestaurantModule} from "./config/setupRestaurantModule.js";
 import {setupMenuItemModule} from "./config/setupMenuItemModule.js";
 import {setupOrderModule} from "./config/setupOrderModule.js";
 import {setupWebSocketModule} from "./config/setupWebSocketModule.js";
+import {setupUserModule} from "./config/setupUserModule.js";
 import {initializeDatabase} from "./config/initializeDatabase.js";
 
 dotenv.config();
@@ -69,10 +70,12 @@ const io = new Server(httpServer, {
 const restaurantModule = setupRestaurantModule(models);
 const menuItemModule = setupMenuItemModule(models);
 const orderModule = setupOrderModule(models);
+const userModule = setupUserModule(models);
 
 app.use(restaurantModule.router);
 app.use(menuItemModule.router);
 app.use(orderModule.router);
+app.use(userModule.router);
 
 
 const PORT = process.env.PORT || 5001;

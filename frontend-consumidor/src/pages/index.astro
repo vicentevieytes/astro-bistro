@@ -8,6 +8,10 @@ import type { restaurante } from '../utils/CustomTypes';
 const publicBackendUrl = import.meta.env.BACKEND_URL;
 const localesResponse = await fetch(`${publicBackendUrl}/restaurantes`);
 const restaurants = (await localesResponse.json()) as restaurante[];
+
+const urlParams = new URLSearchParams(Astro.url.search);
+let userId = urlParams.get('userId');
+
 ---
 
 <Layout title="VerLaCarta | Consumidor">
@@ -16,7 +20,7 @@ const restaurants = (await localesResponse.json()) as restaurante[];
 			Bienvenido a <span class="text-gradient">VerLaCarta</span>
 		</h1>
 		<h2>Locales cercanos</h2>
-		<MapComponent restaurants={restaurants} />
+		<MapComponent restaurants={restaurants} userId={userId} />
 	</main>
 </Layout>
 

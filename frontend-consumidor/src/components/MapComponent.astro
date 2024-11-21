@@ -3,14 +3,17 @@ import type { restaurante } from '../utils/CustomTypes';
 
 interface Props {
   restaurants: restaurante[];
+  userId: string;
 }
 
-const { restaurants } = Astro.props;
+const { restaurants, userId } = Astro.props;
+
+// const userId = new URLSearchParams(window.location.search).get('userId');
 
 // Prepare the marker data on the server
 const markersData = restaurants.map(local => ({
   coords: [parseFloat(local.latitude), parseFloat(local.longitude)],
-  popupContent: `<a href="../local?id=${local.restaurant_id}">${local.restaurant_name}</a><p>${local.description}</p>`,
+  popupContent: `<a href="../local?id=${local.restaurant_id}&userId=${userId}">${local.restaurant_name}</a><p>${local.description}</p>`,
   name: local.restaurant_name
 }));
 

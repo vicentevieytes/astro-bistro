@@ -11,6 +11,7 @@ const backendUrl = import.meta.env.BACKEND_URL;
 
 const urlParams = new URLSearchParams(Astro.url.search);
 let localId = urlParams.get('id');
+let userId = urlParams.get('userId'); // Retrieve userId from URL parameters
 
 let menuData: itemMenu[] = [];
 
@@ -31,7 +32,7 @@ console.log(menuData)
 
 <Layout title="Hacer Pedido">
     <main>
-        <Cart />
+        <Cart userId={userId} />
         <h1>
             Hacer un pedido en <span class="text-gradient" id="restaurant-name"></span>
         </h1>
@@ -57,7 +58,7 @@ console.log(menuData)
             <button type="button" id="submit-order" class="submit-button">Realizar Pedido</button>
         </section>
         <ul role="list" class="link-card-grid">
-            <Card href="../" title="Ir a la página principal" body="Volver a VerLaCarta" />
+            <Card href={`../?userId=${userId}`} title="Ir a la página principal" body="Volver a VerLaCarta" />
         </ul>
 
     </main>
@@ -152,7 +153,16 @@ console.log(menuData)
             const dishName = selectedDish.textContent?.split(' - ')[0] || '';
             const dishPrice = parseFloat(selectedDish.textContent?.split(' - $')[1] || '0');
             const localId = orderForm.dataset.localId;
-            const userId = 1; // Hardcoded for now
+            // const userId = 1; // Hardcoded for now
+
+            const urlParams = new URLSearchParams(window.location.search);
+            let userId = urlParams.get('userId'); // Retrieve userId from URL parameters
+            if (!userId) {
+                console.error('User ID is missing in the URL.');
+            }
+            else {
+                console.log(userId);
+            }
 
             const newItem = {
                 id: dishId,

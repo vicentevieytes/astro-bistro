@@ -9,8 +9,8 @@ interface RestaurantOrderItem extends OrderItem {
 
 interface Props {
     initialItems?: RestaurantOrderItem[];
+    userId: string;
 }
-
 
 const { initialItems = [] } = Astro.props;
 
@@ -28,30 +28,11 @@ const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
 
 console.log(initialItems)
 console.log(groupedItems);
+const publicBackendUrl = import.meta.env.BACKEND_URL;
 
 ---
 
 <div id="order-cart">
-    <h2>Your Orders</h2>
-    {Object.entries(groupedItems).map(([restaurantId, restaurant]) => (
-
-            <div class="restaurant-order">
-                <h3>{restaurant.name}</h3>
-                <ul class="cart-items">
-                    {restaurant.items.map((item) => (
-                            <li>
-                                {item.name} - Quantity: {item.quantity} - Status: {item.status}
-                            </li>
-                    ))}
-                </ul>
-                <p>Restaurant Total: $<span class="restaurant-total">
-        {restaurant.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-      </span></p>
-            </div>
-    ))}
-    <p>Grand Total: $<span id="cart-total">
-    {initialItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-  </span></p>
 </div>
 
 <script>
@@ -59,13 +40,32 @@ console.log(groupedItems);
 
     const socketUrl = import.meta.env.PUBLIC_SOCKET_URL;
     const socket = io(socketUrl);
+
     let cartItems = [];
+
+    const backendUrl = import.meta.env.PUBLIC_BACKEND_URL;
+
     const cartDiv = document.getElementById('order-cart');
+    const urlParams = new URLSearchParams(window.location.search);
+    let userId = urlParams.get('userId'); // Retrieve userId from URL parameters
+
+    let username = '';
+
+    if (!userId) {
+        console.error('User ID is missing in the URL.');
+    } else {
+        fetch(`${backendUrl}/users/${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                username = data.username;
+            })
+            .catch(error => console.error('Error fetching username:', error));
+    }
+
 
     // Fetch cart items when the component mounts
     document.addEventListener('DOMContentLoaded', () => {
         // TODO: Replace this with actual user ID when you implement authentication
-        const userId = 1;
         socket.emit('fetchOrders', userId);
     });
 
@@ -108,7 +108,7 @@ console.log(groupedItems);
 
             let cartHTML = `
         <div class="localesCercanos">
-            <h2 style="margin: 0 0 1rem 0; color: white;">Tus pedidos</h2>
+            <h2 style="margin: 0 0 1rem 0; color: white;">Pedidos de ${username}</h2>
             <div style="
                 display: grid; 
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));

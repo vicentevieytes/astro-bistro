@@ -17,6 +17,9 @@ if (!localId){
 const response = await fetch(`${backendUrl}/restaurantes/${localId}`);
 const localData = await response.json();
 
+const urlParams = new URLSearchParams(Astro.url.search);
+let userId = urlParams.get('userId'); // Retrieve userId from URL parameters
+
 ---
 
 <Layout title="Restaurant">
@@ -54,12 +57,12 @@ const localData = await response.json();
 			role="list"
 			class="link-card-grid">
 			<Card
-				href={`../menu?id=${localId}`}
+				href={`../menu?id=${localId}&userId=${userId}`}
 				title="Ver la carta"
 				body="Accedé a todas las opciones de platos y bebidas que tenemos disponibles."
 			/>
 			<Card
-				href={`../pedido?id=${localId}`}
+				href={`../pedido?id=${localId}&userId=${userId}`}
 				title="Hacer pedido"
 				body="Realizá tu pedido de la forma más fácil y efectiva."
 			/>
@@ -67,11 +70,7 @@ const localData = await response.json();
 		<ul
 			role="list"
 			class="link-card-grid">
-			<Card
-				href="../"
-				title="Ir a la página principal"
-				body="Volver a VerLaCarta"
-			/>
+			<Card href={`../?userId=${userId}`} title="Ir a la página principal" body="Volver a VerLaCarta" />
 		</ul>
 	</main>
 </Layout>

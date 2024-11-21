@@ -11,6 +11,7 @@ const backendUrl = import.meta.env.BACKEND_URL;
 
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+let userId = urlParams.get('userId'); // Retrieve userId from URL parameters
 
 let menuData = [],
 	restauranteData = [];
@@ -27,12 +28,12 @@ console.log(backendUrl);
 
 <Layout title="Menú del Restaurante">
 	<main>
-		<Cart />
+		<Cart userId={userId} />
 
 		<h1>{(restauranteData as restaurante).restaurant_name}</h1>
 		<ul role="list" class="link-card-grid">
-			<Card href=`../local?id=${localId}` title="Volver" body="Volver a la página del restaurante" />
-			<Card href="../../" title="Ir a la página principal" body="Volver a VerLaCarta" />
+			<Card href=`../local?id=${localId}&userId=${userId}` title="Volver" body="Volver a la página del restaurante" />
+			<Card href={`../?userId=${userId}`} title="Ir a la página principal" body="Volver a VerLaCarta" />
 		</ul>
 
 		{
