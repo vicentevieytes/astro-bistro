@@ -57,7 +57,8 @@ console.log(groupedItems);
 <script>
     import { io } from "socket.io-client";
 
-    const socket = io('http://localhost:5001');
+    const socketUrl = import.meta.env.PUBLIC_SOCKET_URL;
+    const socket = io(socketUrl);
     let cartItems = [];
     const cartDiv = document.getElementById('order-cart');
 
