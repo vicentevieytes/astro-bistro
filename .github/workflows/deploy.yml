@@ -22,7 +22,7 @@ jobs:
         script: |
           cd /root/astro-bistro/
           git pull origin main
-          docker compose down
+          docker compose down --volumes=false
           docker build -t astro-bistro .
           docker compose -f docker-compose-digitalocean.yaml up -d backend frontend-consumidor frontend-restaurante
 
