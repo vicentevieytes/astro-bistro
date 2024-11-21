@@ -18,8 +18,7 @@ export class webSocketOrderController {
         }
     }
 
-    // TODO: Change everything that says "Cart" to "Orders"
-    async fetchCart(socket, userId) {
+    async fetchOrders(socket, userId) {
         try {
             const cart = await this.service.getOrdersByUsedId(userId);
             // Let's send the json:
@@ -31,12 +30,12 @@ export class webSocketOrderController {
             socket.emit('cartFetched', cart);
 
         } catch (error) {
-            console.error('Error in handleFetchCart:', error);
+            console.error('Error in fetchOrders:', error);
             // socket.emit('error', 'Failed to fetch cart');
         }
     }
 
-    async addToCart(socket, io, items) {
+    async addOrder(socket, io, items) {
         try {
             if (!Array.isArray(items) || items.length === 0) {
                 throw new Error('Invalid or empty items list');
@@ -54,7 +53,7 @@ export class webSocketOrderController {
 
             io.emit('cartUpdated', updatedCart);
         } catch (error) {
-            console.error('Error in addToCart:', error);
+            console.error('Error in addOrder:', error);
             socket.emit('error', 'Failed to add items to cart');
         }
     }

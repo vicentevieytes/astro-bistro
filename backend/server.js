@@ -72,17 +72,14 @@ const webSocketModule = setupWebSocketModule(models);
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    // TODO: Change name to 'addOrder'
-    socket.on('addToCart', (items) =>
-        webSocketModule.controller.addToCart(socket, io, items));
+    socket.on('addOrder', (items) =>
+        webSocketModule.controller.addOrder(socket, io, items));
 
-    // TODO: Change to fetchOrders.
-    socket.on('fetchCart', (userId) =>
-        webSocketModule.controller.fetchCart(socket, userId));
+    socket.on('fetchOrders', (userId) =>
+        webSocketModule.controller.fetchOrders(socket, userId));
 
     socket.on('updateOrderStatus', (data) =>
         webSocketModule.controller.updateOrderStatus(socket, io, data));
-
 
     socket.on('disconnect', () => {
         console.log('User disconnected.');

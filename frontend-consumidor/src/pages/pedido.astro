@@ -155,7 +155,7 @@ console.log(menuData)
 
         submitOrderButton?.addEventListener('click', () => {
             if (orderSummary.length > 0) {
-                socket.emit('addToCart', orderSummary); // Emit the entire order summary
+                socket.emit('addOrder', orderSummary); // Emit the entire order summary
                 orderSummary = []; // Clear the order summary after submission
                 updateOrderSummaryDisplay(); // Update the display to clear the list
                 }

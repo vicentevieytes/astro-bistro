@@ -65,7 +65,7 @@ console.log(groupedItems);
     document.addEventListener('DOMContentLoaded', () => {
         // TODO: Replace this with actual user ID when you implement authentication
         const userId = 1;
-        socket.emit('fetchCart', userId);
+        socket.emit('fetchOrders', userId);
     });
 
     socket.on('cartFetched', (items) => {
