@@ -237,15 +237,39 @@ import '../styles/global.css';
 			});
 		}
 
+
+
 		// Enviar los datos al servidor
-	fetch(`${backendUrl}/restaurantes`, {
-			method: 'POST',
-			body: formData,
-		})
-			.then((response) => response.json())
-			.then((data) => console.log('Success:', data))
-			.catch((error) => console.error('Error:', error));
+	// fetch(`${backendUrl}/restaurantes`, {
+	// 		method: 'POST',
+	// 		body: formData,
+	// 	})
+	// 		.then((response) => response.json())
+	// 		.then((data) => console.log('Success:', data))
+	// 		.catch((error) => console.error('Error:', error));
+	// });
+
+		// TODO: Si la redireccion falla, descomenta el codigo de arriba para revertir los cambios
+		try {
+			const response = await fetch(`${backendUrl}/restaurantes`, {
+				method: 'POST',
+				body: formData,
+				});
+
+			if (!response.ok) {
+				throw new Error('Failed to create restaurant');
+			}
+
+			const response_json = await response.json();
+
+			window.location.href = `/adminResto?id=${response_json.data.restaurant_id}`;
+
+		} catch (error) {
+			console.error('Error:', error);
+			alert('Ocurrió un error al crear el restaurante. Probablemente te faltó llenar un campo.');
+		}
 	});
+
 </script>
 
 <style>
