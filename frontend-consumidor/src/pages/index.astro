@@ -1,14 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Card from '../components/Card.astro';
+import MapComponent from '../components/MapComponent.astro';
 import '../styles/global.css';
----
+import type { restaurante } from '../utils/CustomTypes';
 
-<head>
-	<meta charset="utf-8" />
-	<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-	<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-</head>
+// Fetch restaurant data on the server side
+const publicBackendUrl = import.meta.env.BACKEND_URL;
+const localesResponse = await fetch(`${publicBackendUrl}/restaurantes`);
+const restaurants = (await localesResponse.json()) as restaurante[];
+---
 
 <Layout title="VerLaCarta | Consumidor">
 	<main>
@@ -16,52 +16,12 @@ import '../styles/global.css';
 			Bienvenido a <span class="text-gradient">VerLaCarta</span>
 		</h1>
 		<h2>Locales cercanos</h2>
-		<div id="map" class="map-container" style="height: 500px;"></div>
-
-		<script>
-			import L from 'leaflet';
-			import type { restaurante } from '../utils/CustomTypes';
-
-			document.addEventListener('DOMContentLoaded', async function () {
-				// Coordenadas de Ciudad Universitaria
-				const ciudadUniversitariaCoords = [-34.541895, -58.437618] as L.LatLngExpression,
-					map = L.map('map').setView(ciudadUniversitariaCoords, 15);
-
-				// Cargar el mapa base desde OpenStreetMap
-				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-					attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-				}).addTo(map);
-
-				// Marcar la ubicación de Ciudad Universitaria
-				L.marker(ciudadUniversitariaCoords).addTo(map).bindPopup('<h3>Ciudad Universitaria</h3><p>Buenos Aires</p>').openPopup();
-
-				// Simular algunos locales cercanos con descripciones detalladas
-				const localesResponse = await fetch('http://localhost:5001/restaurantes'),
-					localesData = (await localesResponse.json()) as restaurante[];
-
-				// Agregar marcadores de locales cercanos con descripciones detalladas
-				localesData.forEach((local: restaurante) => {
-					const coords = [parseFloat(local.latitude), parseFloat(local.longitude)] as L.LatLngExpression,
-						marker = L.marker(coords).addTo(map);
-
-					// Bind popup con descripción
-					marker.bindPopup(`<a href="../local?id=${local.restaurant_id}">${local.restaurant_name}</a><p>${local.description}</p>`);
-
-					// Abrir el popup al hacer clic en el marcador
-					marker.on('click', () => {
-						marker.openPopup();
-					});
-
-					// Console log para verificar que se añaden los marcadores
-					console.log(`Marcador agregado: ${local.restaurant_name} en ${coords}`);
-				});
-			});
-		</script>
+		<MapComponent restaurants={restaurants} />
 	</main>
 </Layout>
 
 <style>
-	.map-container {
+	:global(.map-container) {
 		height: 500px; /* Mantener la altura que ya tenías */
 		border-radius: 15px; /* Bordes redondeados */
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra */

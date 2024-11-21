@@ -23,6 +23,12 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     host: process.env.DB_HOST,
     dialect: 'postgres',
     port: process.env.DB_PORT,
+    retry: {
+        match: [/ECONNREFUSED/],
+        max: 8,  // Number of retries
+        backoffBase: 1000,  // Initial backoff duration in ms
+        backoffExponent: 1.5  // Exponential backoff factor
+    }
 });
 
 // Test the connection
@@ -40,9 +46,14 @@ sequelize.sync();
 
 app.use(
     cors({
-        origin: ['http://localhost:4321', 'http://localhost:4322'],
+        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL, process.env.INTERNAL_CONSUMIDOR_FE_URL, process.env.INTERNAL_RESTAURANTE_FE_URL],
     }),
 );
+
+console.log(`PUBLIC_CONSUMIDOR_FE_URL: ${process.env.PUBLIC_CONSUMIDOR_FE_URL}`);
+console.log(`PUBLIC_RESTAURANTE_FE_URL: ${process.env.PUBLIC_RESTAURANTE_FE_URL}`);
+console.log(`INTERNAL_CONSUMIDOR_FE_URL: ${process.env.INTERNAL_CONSUMIDOR_FE_URL}`);
+console.log(`INTERNAL_RESTAURANTE_FE_URL: ${process.env.INTERNAL_RESTAURANTE_FE_URL}`);
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true })); // Para manejar datos de formularios
@@ -50,7 +61,7 @@ app.use(express.urlencoded({ extended: true })); // Para manejar datos de formul
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:4321', 'http://localhost:4322'],
+        origin: [process.env.PUBLIC_CONSUMIDOR_FE_URL, process.env.PUBLIC_RESTAURANTE_FE_URL, process.env.INTERNAL_CONSUMIDOR_FE_URL, process.env.INTERNAL_RESTAURANTE_FE_URL],
         methods: ['GET', 'POST'],
     },
 });
@@ -86,8 +97,9 @@ io.on('connection', (socket) => {
 });
 
 // Replace app.listen with httpServer.listen
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     initializeDatabase(models);
+    console.log("Database data initialized");
 });
 

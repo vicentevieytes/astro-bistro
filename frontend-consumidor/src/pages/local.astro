@@ -7,20 +7,20 @@ import Cart from '../components/Cart.astro';
 import { OrderStatus } from '../types/types';
 
 
-const url = new URL(Astro.request.url),
-	localId = url.searchParams.get('id'),
-	response = await fetch(`http://localhost:5001/restaurantes/${localId}`), // Did I break anything by changing this endpoint?
-	localData: Restaurante = await response.json();
-	// localData = data[0];
+const backendUrl = import.meta.env.BACKEND_URL;
 
-// console.log(data);
-// console.log("AAA")
+const url = new URL(Astro.request.url);
+const localId = url.searchParams.get('id');
+if (!localId){
+  return Astro.redirect('/local?id=1'); // Redirect if `id` is missing
+}
+const response = await fetch(`${backendUrl}/restaurantes/${localId}`);
+const localData = await response.json();
+
 ---
 
 <Layout title="Restaurant">
 	<main>
-		<Cart />
-
 		<!-- Logo and Restaurant Name Section -->
 		<div class="restaurant-header">
 			<img

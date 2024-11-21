@@ -7,13 +7,14 @@ import type { itemMenu } from '../utils/CustomTypes';
 
 const urlParams = new URLSearchParams(Astro.url.search);
 const localId = urlParams.get('id'); // Obtener el ID del restaurante desde la URL
+const backendUrl = import.meta.env.BACKEND_URL;
 
 let menuData = [],
     restauranteData = [];
 
 if (localId) {
-    const response = await fetch(`http://localhost:5001/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
-        responseRestaurante = await fetch(`http://localhost:5001/restaurantes/${localId}`);  // Did I break anything by changing this endpoint?
+    const response = await fetch(`${backendUrl}/restaurantes/${localId}/menu`), // TODO: /restaurante/id/menu ???
+    responseRestaurante = await fetch(`${backendUrl}/restaurantes/${localId}`);  // Did I break anything by changing this endpoint?
     restauranteData = await responseRestaurante.json();
     menuData = await response.json();
 }

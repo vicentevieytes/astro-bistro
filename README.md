@@ -2,7 +2,25 @@
 
 A web application for managing your restaurant's menu and orders
 
-# Instalacion:
+# Buildear la imagen Docker
+
+```bash
+docker build -t astro-bistro
+```
+
+# Iniciar la aplicación con docker compose
+
+```bash
+docker compose up
+```
+
+Esto iniciara:
+- El frontend del consumidor en el puerto 4321
+- El frontend del restaurante en el puerto 4322
+- El backend en el puerto 5001
+- La base de datos en el puerto 5432
+
+# Instalacion local:
 
 Instalar dependencias:
 
@@ -14,16 +32,18 @@ cd ../frontend-restaurante
 npm install
 ```
 
-Iniciar la base de datos:
+Desde la raiz del repositorio iniciar la base de datos con docker compose (o cargar el dump backend/verLaCartaBackup.sql en una instancia local de postgres):
 
 ```bash
-docker compose up
+docker compose up db
 ```
 
 Copiar el archivo `backend/.env.sample` a `.env`, modificar las variables de entorno si es necesario.
 
 ```bash
 cp backend/.env.sample backend/.env
+cp frontend-consumidor/.env.sample frontend-consumidor/.env
+cp frontend-restaurante/.env.sample frontend-restaurante/.env
 ```
 
 Iniciar los servidores en terminales distintas:

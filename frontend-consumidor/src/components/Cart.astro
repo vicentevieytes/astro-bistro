@@ -12,7 +12,7 @@ interface Props {
 }
 
 
-const { initialItems = [] } = Astro.props;
+const { initialItems = []} = Astro.props;
 
 // Group items by restaurant
 const groupedItems = initialItems.reduce((acc, item: RestaurantOrderItem) => {
@@ -57,9 +57,13 @@ console.log(groupedItems);
 <script>
     import { io } from "socket.io-client";
 
-    const socket = io('http://localhost:5001');
-    let cartItems = [];
+    // Get the socket URL from the data attribute
     const cartDiv = document.getElementById('order-cart');
+    const socketUrl = import.meta.env.PUBLIC_SOCKET_URL;
+    // Connect to the socket
+    const socket = io(socketUrl);
+
+    let cartItems = [];
 
     // Fetch cart items when the component mounts
     document.addEventListener('DOMContentLoaded', () => {
