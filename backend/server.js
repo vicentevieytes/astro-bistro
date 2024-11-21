@@ -68,7 +68,6 @@ const PORT = process.env.PORT || 5001;
 
 const webSocketModule = setupWebSocketModule(models);
 
-
 io.on('connection', (socket) => {
     console.log('A user connected');
 
