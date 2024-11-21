@@ -5,8 +5,6 @@ export class webSocketOrderController {
         this.service = orderService;
     }
 
-    // TODO: Decide if we need socket.emit or io.emit...
-
     async updateOrderStatus(socket, io, { orderId, newStatusId }) {
         try {
             const updatedOrder = await this.service.updateOrderStatus(orderId, newStatusId);
@@ -21,17 +19,13 @@ export class webSocketOrderController {
     async fetchOrders(socket, userId) {
         try {
             const cart = await this.service.getOrdersByUsedId(userId);
-            // Let's send the json:
             console.log("BEFORE:", cart);
-            // const cartJson = JSON.stringify(cart);
-            // console.log('cart:', cartJson);
             console.log("EPA")
 
             socket.emit('cartFetched', cart);
 
         } catch (error) {
             console.error('Error in fetchOrders:', error);
-            // socket.emit('error', 'Failed to fetch cart');
         }
     }
 

@@ -1,7 +1,6 @@
 import { Restaurant } from "../../domain/entities/Restaurant.js";
 
 export class RestaurantRepository {
-    // TODO: Maybe add a cache...
     constructor(models) {
         this.models = models;
     }
@@ -28,19 +27,7 @@ export class RestaurantRepository {
             }]
         });
 
-        // console.log(restaurant.MenuItems[0]);
-
         const restaurantData = restaurant.get({ plain: true });
-        // console.log(restaurantData);
-
-        // console.log("LALAL")
-
-        const restaurantObj = new Restaurant(restaurantData);
-
-        // console.log(restaurantObj)
-
-        // console.log("LELELEL")
-
 
         return restaurant ? new Restaurant(restaurant.get({ plain: true })) : null;
     }
@@ -54,7 +41,6 @@ export class RestaurantRepository {
             });
 
             if (menuItems && menuItems.length > 0) {
-                // TODO: Call the MenuItemRepository here???
                 const menuItemsData = menuItems.map(item => ({
                     restaurant_id: restaurant.restaurant_id,
                     name: item.nombre,

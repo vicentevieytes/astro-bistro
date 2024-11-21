@@ -1,9 +1,7 @@
 export class RestaurantController {
-    constructor(restaurantService, menuItemService, orderService) {
+    constructor(restaurantService) {
         this.service = restaurantService;
-        // TODO: Is it fine for the RestaurantController to know about the MenuItemService?
-        this.menuItemService = menuItemService;
-        this.orderService = orderService;
+
     }
 
     async getRestaurants(req, res, next) {
@@ -11,7 +9,6 @@ export class RestaurantController {
             const restaurants = await this.service.getAllRestaurants();
             res.json(restaurants);
         } catch (error) {
-            // TODO: Create a middleware to handle errors
             next(error);
         }
     }
@@ -28,7 +25,6 @@ export class RestaurantController {
     async createRestaurant(req, res, next) {
         try {
 
-            // TODO: Remove the necessity of this transformation by changing the frontend
             req.body.menuItems = req.body.platos;
             delete req.body.platos;
 
