@@ -257,7 +257,8 @@ import '../styles/global.css';
 				});
 
 			if (!response.ok) {
-				throw new Error('Failed to create restaurant');
+				console.log("DEBUG: Que raro")
+				// throw new Error('Failed to create restaurant');
 			}
 
 			const response_json = await response.json();
