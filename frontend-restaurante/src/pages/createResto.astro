@@ -250,25 +250,28 @@ import '../styles/global.css';
 	// });
 
 		// TODO: Si la redireccion falla, descomenta el codigo de arriba para revertir los cambios
-		// try {
-		const response = await fetch(`${backendUrl}/restaurantes`, {
-			method: 'POST',
-			body: formData,
-			});
+		try {
+			const response = await fetch(`${backendUrl}/restaurantes`, {
+				method: 'POST',
+				body: formData,
+				});
 
-		if (!response.ok) {
-			console.log("DEBUG: Que raro")
-			// throw new Error('Failed to create restaurant');
+			if (!response.ok) {
+				console.log("DEBUG: Que raro")
+				// throw new Error('Failed to create restaurant');
+			}
+
+			// Extra line
+
+			const response_json = await response.json();
+
+			window.location.href = `/adminResto?id=${response_json.data.restaurant_id}`;
+
+		} catch (error) {
+			console.log("Oops")
+			// console.error('Error:', error);
+			// alert('Ocurrió un error al crear el restaurante. Probablemente te faltó llenar un campo.');
 		}
-
-		const response_json = await response.json();
-
-		window.location.href = `/adminResto?id=${response_json.data.restaurant_id}`;
-
-		// } catch (error) {
-		// 	console.error('Error:', error);
-		// 	alert('Ocurrió un error al crear el restaurante. Probablemente te faltó llenar un campo.');
-		// }
 	});
 
 </script>
