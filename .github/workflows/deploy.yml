@@ -24,5 +24,6 @@ jobs:
           git pull origin main
           docker compose down
           docker build -t astro-bistro .
-          docker compose -f docker-compose-digitalocean.yaml up -d
+          docker compose -f docker-compose-digitalocean.yaml up -d backend frontend-consumidor frontend-restaurante
+
 
